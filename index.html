@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>USMC MCEN OpenAI Agent Interface</title>
+  <!-- You can use a CDN for Material UI or your preferred CSS framework -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mui/material@5.14.6/dist/material.min.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Roboto', Arial, sans-serif;
+      background: #f8f9fa;
+    }
+    .header {
+      background: #1e2a37;
+      color: #fff;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .main-container {
+      max-width: 900px;
+      margin: 2rem auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      padding: 2rem;
+    }
+    .chat-history {
+      max-height: 400px;
+      overflow-y: auto;
+      margin-bottom: 1.5rem;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 1rem;
+      background: #f5f7fa;
+    }
+    .chat-message {
+      margin-bottom: 1rem;
+    }
+    .chat-message.user {
+      text-align: right;
+      color: #205081;
+    }
+    .chat-message.agent {
+      text-align: left;
+      color: #14532d;
+    }
+    .chat-input-area {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .chat-input-area input, .chat-input-area textarea {
+      flex: 1;
+      padding: 0.75rem;
+      border-radius: 4px;
+      border: 1px solid #b0b0b0;
+      font-size: 1rem;
+      resize: none;
+    }
+    .chat-input-area button {
+      padding: 0.75rem 1.5rem;
+      background: #205081;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .chat-input-area button:hover {
+      background: #17355f;
+    }
+    @media (max-width: 600px) {
+      .main-container { padding: 1rem; }
+      .header { flex-direction: column; gap: 0.5rem; padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <img src="usmc-logo.png" alt="USMC" style="height:40px;vertical-align:middle;margin-right:1rem;">
+      <span style="font-size:1.3rem;font-weight:700;">MCEN OpenAI Agent Interface</span>
+    </div>
+    <button style="background:transparent;border:none;color:#fff;cursor:pointer;font-size:1rem;">Logout</button>
+  </div>
+  <div class="main-container">
+    <div class="chat-history" id="chat-history">
+      <!-- Messages will appear here -->
+    </div>
+    <form class="chat-input-area" id="chat-form" autocomplete="off">
+      <textarea id="user-input" rows="2" placeholder="Type your question for the Assistant..." required></textarea>
+      <button type="submit">Send</button>
+    </form>
+  </div>
+  <script>
+    const chatHistory = document.getElementById('chat-history');
+    const chatForm = document.getElementById('chat-form');
+    const userInput = document.getElementById('user-input');
+
+    function addMessage(text, sender) {
+      const msg = document.createElement('div');
+      msg.className = 'chat-message ' + sender;
+      msg.textContent = text;
+      chatHistory.appendChild(msg);
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    chatForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = userInput.value.trim();
+      if (!input) return;
+      addMessage(input, 'user');
+      userInput.value = '';
+      // Call backend (replace with your actual endpoint)
+      try {
+        const res = await fetch('/api/assistant', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: input }),
+        });
+        if (!res.ok) throw new Error('Network response was not ok');
+        const data = await res.json();
+        // Assume agent's response is in data.message (adjust as needed)
+        addMessage(data.message || '[No response]', 'agent');
+      } catch (err) {
+        addMessage('Error: ' + err.message, 'agent');
+      }
+    });
+  </script>
+</body>
+</html>
