@@ -133,7 +133,7 @@ try {
   if (!res.ok) {
     const msg = typeof payload === 'string'
       ? payload
-      : (payload?.error || JSON.stringify(payload));
+      : (payload?.error?.message || payload?.message || JSON.stringify(payload, null, 2));
     addMessage(`HTTP ${res.status} ${res.statusText}: ${msg}`, 'agent');
     return;
   }
