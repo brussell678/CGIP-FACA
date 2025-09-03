@@ -123,13 +123,6 @@
     <div class="chat-history" id="chat-history">
       <!-- Messages will appear here -->
     </div>
-    <div class="attachments" style="margin: 0 0 1rem 0;">
-      <label style="font-weight:700;display:block;margin-bottom:.25rem;">Attach files (PDF, TXT, PNG/JPG):</label>
-      <input id="file-input" type="file" multiple
-         accept=".pdf,.txt,.png,.jpg,.jpeg,.webp,.gif,.heic,.heif,.pdf">
-    <div id="file-list" style="font-size:.9rem;color:#555;margin-top:.5rem;"></div>
-</div>
-
     <form class="chat-input-area" id="chat-form" autocomplete="off">
       <textarea id="user-input" rows="2" placeholder="Type your question for the Assistant..." required></textarea>
       <button type="submit">Send</button>
@@ -142,12 +135,6 @@
     // Keep the last ~12 turns to control token usage
     const history = [];
     const MAX_TURNS = 12;
-    const fileInput = document.getElementById('file-input');
-    const fileList = document.getElementById('file-list');
-     fileInput?.addEventListener('change', () => {
-    const names = [...fileInput.files].map(f => `${f.name} (${Math.ceil(f.size/1024)} KB)`);
-     fileList.textContent = names.length ? `Attached: ${names.join(', ')}` : '';
-});
 
     // ===== BEGIN FAC/COA DATA & WIRING =====
 
@@ -230,16 +217,18 @@ chatForm.addEventListener('submit', async (e) => {
   userInput.value = '';
 
   try {
-    const form = new FormData();
-    form.append('query', input);
-    form.append('tier', tierSelect?.value || '');
-    form.append('fac', facSelect?.value || '');
-    form.append('facLabel', facSelect?.options[facSelect.selectedIndex]?.text || '');
-    form.append('coa', coaSelect?.value || '');
-    form.append('history', JSON.stringify(history || []));
-    for (const f of (fileInput?.files || [])) form.append('files', f, f.name);
-
-    const res = await fetch('https://chanfana-openapi-template.b-russell776977.workers.dev/', { method: 'POST', body: form });
+    const res = await fetch('https://chanfana-openapi-template.b-russell776977.workers.dev/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: input,
+        tier: tierSelect?.value,
+        fac: facSelect?.value,
+        facLabel: facSelect?.options[facSelect.selectedIndex]?.text || '',
+        coa: coaSelect?.value,
+        history                // <— include conversation so far
+      }),
+    });
 
     const ct = res.headers.get('content-type') || '';
     const payload = ct.includes('application/json') ? await res.json() : await res.text();
