@@ -204,44 +204,53 @@ tierSelect.addEventListener('change', () => populateFACsByTier(tierSelect.value)
       chatHistory.scrollTop = chatHistory.scrollHeight;
     }
 
-    chatForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const input = userInput.value.trim();
-      if (!input) return;
-      addMessage(input, 'user');
-      userInput.value = '';
-      // Call backend (replace with your actual endpoint)
-try {
-  const res = await fetch('https://chanfana-openapi-template.b-russell776977.workers.dev/', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-    query: input,
-    tier: tierSelect.value,
-    fac: facSelect.value,
-    facLabel: facSelect.options[facSelect.selectedIndex]?.text || '',
-    coa: coaSelect.value
-  }),
-  });
+chatForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const input = userInput.value.trim();
+  if (!input) return;
 
-  // Read payload even on errors
-  const ct = res.headers.get('content-type') || '';
-  const payload = ct.includes('application/json') ? await res.json() : await res.text();
+  // show + record the user turn
+  addMessage(input, 'user');
+  history.push({ role: 'user', text: input });
+  if (history.length > MAX_TURNS * 2) history.splice(0, history.length - MAX_TURNS * 2);
 
-  if (!res.ok) {
-    const msg = typeof payload === 'string'
-      ? payload
-      : (payload?.error?.message || payload?.message || JSON.stringify(payload, null, 2));
-    addMessage(`HTTP ${res.status} ${res.statusText}: ${msg}`, 'agent');
-    return;
-  }
+  userInput.value = '';
 
-  addMessage(payload.message ?? payload.output_text ?? '[No response]', 'agent');
-} catch (err) {
-  addMessage('Fetch failed: ' + err.message, 'agent');
-}
-
+  try {
+    const res = await fetch('https://chanfana-openapi-template.b-russell776977.workers.dev/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: input,
+        tier: tierSelect?.value,
+        fac: facSelect?.value,
+        facLabel: facSelect?.options[facSelect.selectedIndex]?.text || '',
+        coa: coaSelect?.value,
+        history                // <— include conversation so far
+      }),
     });
+
+    const ct = res.headers.get('content-type') || '';
+    const payload = ct.includes('application/json') ? await res.json() : await res.text();
+
+    if (!res.ok) {
+      const msg = typeof payload === 'string'
+        ? payload
+        : (payload?.error?.message || payload?.message || JSON.stringify(payload, null, 2));
+      addMessage(`HTTP ${res.status} ${res.statusText}: ${msg}`, 'agent');
+      return;
+    }
+
+    const reply = payload.message ?? payload.output_text ?? '[No response]';
+    addMessage(reply, 'agent');
+    history.push({ role: 'assistant', text: reply });
+    if (history.length > MAX_TURNS * 2) history.splice(0, history.length - MAX_TURNS * 2);
+
+  } catch (err) {
+    addMessage('Fetch failed: ' + err.message, 'agent');
+  }
+});
+
   </script>
 </body>
 </html>
