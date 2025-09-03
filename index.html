@@ -132,6 +132,9 @@
     const chatHistory = document.getElementById('chat-history');
     const chatForm = document.getElementById('chat-form');
     const userInput = document.getElementById('user-input');
+    // Keep the last ~12 turns to control token usage
+    const history = [];
+    const MAX_TURNS = 12;
 
     // ===== BEGIN FAC/COA DATA & WIRING =====
 
