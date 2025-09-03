@@ -119,19 +119,30 @@
       addMessage(input, 'user');
       userInput.value = '';
       // Call backend (replace with your actual endpoint)
-      try {
-        const res = await fetch('https://chanfana-openapi-template.b-russell776977.workers.dev/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query: input }),
-        });
-        if (!res.ok) throw new Error('Network response was not ok');
-        const data = await res.json();
-        // Assume agent's response is in data.message (adjust as needed)
-        addMessage(data.message || '[No response]', 'agent');
-      } catch (err) {
-        addMessage('Error: ' + err.message, 'agent');
-      }
+try {
+  const res = await fetch('https://chanfana-openapi-template.b-russell776977.workers.dev/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query: input }),
+  });
+
+  // Read payload even on errors
+  const ct = res.headers.get('content-type') || '';
+  const payload = ct.includes('application/json') ? await res.json() : await res.text();
+
+  if (!res.ok) {
+    const msg = typeof payload === 'string'
+      ? payload
+      : (payload?.error || JSON.stringify(payload));
+    addMessage(`HTTP ${res.status} ${res.statusText}: ${msg}`, 'agent');
+    return;
+  }
+
+  addMessage(payload.message ?? payload.output_text ?? '[No response]', 'agent');
+} catch (err) {
+  addMessage('Fetch failed: ' + err.message, 'agent');
+}
+
     });
   </script>
 </body>
