@@ -142,6 +142,12 @@
     // Keep the last ~12 turns to control token usage
     const history = [];
     const MAX_TURNS = 12;
+    const fileInput = document.getElementById('file-input');
+    const fileList = document.getElementById('file-list');
+     fileInput?.addEventListener('change', () => {
+    const names = [...fileInput.files].map(f => `${f.name} (${Math.ceil(f.size/1024)} KB)`);
+     fileList.textContent = names.length ? `Attached: ${names.join(', ')}` : '';
+});
 
     // ===== BEGIN FAC/COA DATA & WIRING =====
 
