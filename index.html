@@ -230,18 +230,16 @@ chatForm.addEventListener('submit', async (e) => {
   userInput.value = '';
 
   try {
-    const res = await fetch('https://chanfana-openapi-template.b-russell776977.workers.dev/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: input,
-        tier: tierSelect?.value,
-        fac: facSelect?.value,
-        facLabel: facSelect?.options[facSelect.selectedIndex]?.text || '',
-        coa: coaSelect?.value,
-        history                // <— include conversation so far
-      }),
-    });
+    const form = new FormData();
+    form.append('query', input);
+    form.append('tier', tierSelect?.value || '');
+    form.append('fac', facSelect?.value || '');
+    form.append('facLabel', facSelect?.options[facSelect.selectedIndex]?.text || '');
+    form.append('coa', coaSelect?.value || '');
+    form.append('history', JSON.stringify(history || []));
+    for (const f of (fileInput?.files || [])) form.append('files', f, f.name);
+
+    const res = await fetch('https://<your-worker>.workers.dev/', { method: 'POST', body: form });
 
     const ct = res.headers.get('content-type') || '';
     const payload = ct.includes('application/json') ? await res.json() : await res.text();
