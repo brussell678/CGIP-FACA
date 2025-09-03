@@ -91,6 +91,32 @@
     <button style="background:transparent;border:none;color:#fff;cursor:pointer;font-size:1rem;">Logout</button>
   </div>
   <div class="main-container">
+    <!-- Filters -->
+<div class="filters" style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;">
+  <div style="flex:1;min-width:180px">
+    <label for="tier-select" style="display:block;font-weight:700;margin-bottom:.25rem;">FAC Tier</label>
+    <select id="tier-select" style="width:100%;padding:.5rem;border:1px solid #b0b0b0;border-radius:4px;">
+      <option value="CoRE" selected>CoRE</option>
+      <option value="CoRE+">CoRE+</option>
+      <option value="Non-CoRE">Non-CoRE</option>
+    </select>
+  </div>
+
+  <div style="flex:2;min-width:240px">
+    <label for="fac-select" style="display:block;font-weight:700;margin-bottom:.25rem;">FAC</label>
+    <select id="fac-select" style="width:100%;padding:.5rem;border:1px solid #b0b0b0;border-radius:4px;">
+      <!-- populated by JS based on Tier -->
+    </select>
+  </div>
+
+  <div style="flex:1;min-width:220px">
+    <label for="coa-select" style="display:block;font-weight:700;margin-bottom:.25rem;">Proposed GenAI COA</label>
+    <select id="coa-select" style="width:100%;padding:.5rem;border:1px solid #b0b0b0;border-radius:4px;">
+      <!-- populated by JS -->
+    </select>
+  </div>
+</div>
+
     <div class="chat-history" id="chat-history">
       <!-- Messages will appear here -->
     </div>
@@ -103,6 +129,66 @@
     const chatHistory = document.getElementById('chat-history');
     const chatForm = document.getElementById('chat-form');
     const userInput = document.getElementById('user-input');
+
+    // ===== BEGIN FAC/COA DATA & WIRING =====
+
+// 1) Your FAC index (SAMPLE). Replace/expand with the real list from your CGIP/FAC work.
+//    Keep the shape: { id, name, tier } where tier ∈ 'CoRE' | 'CoRE+' | 'Non-CoRE'
+const FAC_INDEX = [
+  { id: 'admin-001', name: 'ADMIN-001: Unit Diary Accuracy', tier: 'CoRE' },
+  { id: 'supply-014', name: 'SUPPLY-014: Consolidated Memorandum Receipt', tier: 'CoRE' },
+  { id: 'training-022', name: 'TRAINING-022: Annual Training Compliance', tier: 'CoRE+' },
+  { id: 'safety-003', name: 'SAFETY-003: Mishap Reporting Timelines', tier: 'Non-CoRE' },
+  // TODO: paste the full set from your checklist work here
+];
+
+// 2) Proposed GenAI Courses of Action (SAMPLE LABELS).
+//    If your prior chat has exact 4 names, replace these labels to match exactly.
+const COA_OPTIONS = [
+  { id: 'COA-1', label: 'COA 1 – FACA Reference Interpreter' },
+  { id: 'COA-2', label: 'COA 2 – Evidence Pack Builder' },
+  { id: 'COA-3', label: 'COA 3 – CGIP Auto-Checklist Prep' },
+  { id: 'COA-4', label: 'COA 4 – Training/Crash-Course Generator' },
+];
+
+const tierSelect = document.getElementById('tier-select');
+const facSelect  = document.getElementById('fac-select');
+const coaSelect  = document.getElementById('coa-select');
+
+function populateCOAs() {
+  coaSelect.innerHTML = '';
+  COA_OPTIONS.forEach(o => {
+    const opt = document.createElement('option');
+    opt.value = o.id;
+    opt.textContent = o.label;
+    coaSelect.appendChild(opt);
+  });
+}
+
+function populateFACsByTier(tier) {
+  const options = FAC_INDEX.filter(f => f.tier === tier);
+  facSelect.innerHTML = '';
+  if (options.length === 0) {
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = 'No FACs for this tier';
+    facSelect.appendChild(opt);
+    return;
+  }
+  for (const f of options) {
+    const opt = document.createElement('option');
+    opt.value = f.id;                         // send id to backend
+    opt.textContent = f.name;                 // show label to user
+    facSelect.appendChild(opt);
+  }
+}
+
+// Init defaults (Tier defaults to CoRE)
+populateCOAs();
+populateFACsByTier(tierSelect.value);
+tierSelect.addEventListener('change', () => populateFACsByTier(tierSelect.value));
+
+// ===== END FAC/COA DATA & WIRING =====
 
     function addMessage(text, sender) {
       const msg = document.createElement('div');
@@ -123,7 +209,13 @@ try {
   const res = await fetch('https://chanfana-openapi-template.b-russell776977.workers.dev/', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query: input }),
+    body: JSON.stringify({
+    query: input,
+    tier: tierSelect.value,
+    fac: facSelect.value,
+    facLabel: facSelect.options[facSelect.selectedIndex]?.text || '',
+    coa: coaSelect.value
+  }),
   });
 
   // Read payload even on errors
