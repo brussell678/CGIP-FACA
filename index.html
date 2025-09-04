@@ -143,13 +143,109 @@
 
 // 1) Your FAC index (SAMPLE). Replace/expand with the real list from your CGIP/FAC work.
 //    Keep the shape: { id, name, tier } where tier ∈ 'CoRE' | 'CoRE+' | 'Non-CoRE'
+// Replace your FAC_INDEX with this:
 const FAC_INDEX = [
-  { id: 'admin-001', name: 'ADMIN-001: Unit Diary Accuracy', tier: 'CoRE' },
-  { id: 'supply-014', name: 'SUPPLY-014: Consolidated Memorandum Receipt', tier: 'CoRE' },
-  { id: 'training-022', name: 'TRAINING-022: Annual Training Compliance', tier: 'CoRE+' },
-  { id: 'safety-003', name: 'SAFETY-003: Mishap Reporting Timelines', tier: 'Non-CoRE' },
-  // TODO: paste the full set from your checklist work here
+  { id: 'fa-6500', name: '6500: Aircraft Rescue and Fire Fighting (ARFF)', tier: 'Non-CoRE' },
+  { id: 'fa-3500-14', name: '3500.14: Aircrew Training Program', tier: 'CoRE+' },
+  { id: 'fa-3302', name: '3302: Antiterrorism', tier: 'CoRE' },
+  { id: 'fa-5370', name: '5370: Assistance and Hotline Program', tier: 'CoRE+' },
+
+  { id: 'fa-3500-10', name: '3500.10: Aviation Command and Control Training', tier: 'Non-CoRE' },
+  { id: 'fa-11130', name: '11130: Aviation Facilities', tier: 'Non-CoRE' },
+  { id: 'fa-3700', name: '3700: Aviation Operations Administration', tier: 'CoRE+' },
+  { id: 'fa-3750-6', name: '3750.6: Aviation Safety', tier: 'CoRE+' },
+  { id: 'fa-6110', name: '6110: Body Composition and Military Appearance Program', tier: 'CoRE' },
+
+  { id: 'fa-1040', name: '1040: Career Planning Program', tier: 'CoRE' },
+  { id: 'fa-3040', name: '3040: Casualty Affairs', tier: 'CoRE' },
+  { id: 'fa-3400', name: '3400: CBRN Defense', tier: 'Non-CoRE' },
+  { id: 'fa-5060-20-color-guard', name: '5060.20: Color Guard', tier: 'Non-CoRE' },
+  { id: 'fa-5040', name: '5040: Command Inspection Program', tier: 'CoRE+' },
+  { id: 'fa-4400-201', name: '4400.201: Consumer- Level Supply', tier: 'CoRE' },
+
+  { id: 'fa-5580-6', name: '5580.6: Criminal Justice Information Reporting Requirements', tier: 'CoRE+' },
+  { id: 'fa-3501-36', name: '3501.36: Critical Infrastructure Protection (CIP) Program', tier: 'CoRE+' },
+  { id: 'fa-5239', name: '5239: Cyber Security Management', tier: 'CoRE' },
+  { id: 'fa-4650-39', name: '4650.39: Defense Travel System (DTS)', tier: 'CoRE' },
+  { id: 'fa-1630', name: '1630: Detention Facilities', tier: 'Non-CoRE' },
+
+  { id: 'fa-5215', name: '5215: Directives Management', tier: 'CoRE' },
+  { id: 'fa-5060-20-drill', name: '5060.20: Drill', tier: 'Non-CoRE' },
+  { id: 'fa-5090', name: '5090: Environmental Program Management', tier: 'Non-CoRE' },
+  { id: 'fa-1754-4', name: '1754.4: Exceptional Family Member Program (EFMP)', tier: 'Non-CoRE' },
+  { id: 'fa-3571-2', name: '3571.2: Explosive Ordnance Disposal (EOD) Technical Evaluation', tier: 'Non-CoRE' },
+
+  { id: 'fa-11000-22', name: '11000.22: Family Housing', tier: 'Non-CoRE' },
+  { id: 'fa-1500-60', name: '1500.60: Force Preservation Council (FPC) Program', tier: 'CoRE' },
+  { id: 'fa-5510-2', name: '5510.2: Foreign Disclosure', tier: 'Non-CoRE' },
+  { id: 'fa-1553-2', name: '1553.2: Formal School Management', tier: 'Non-CoRE' },
+  { id: 'fa-4600-40', name: '4600.40: Government Travel Charge Card Program (GTCCP)', tier: 'CoRE' },
+
+  { id: 'fa-8000', name: '8000: Ground Ordnance Maintenance', tier: 'Non-CoRE' },
+  { id: 'fa-6000', name: '6000: Health Service Support (HSS)', tier: 'CoRE' },
+  { id: 'fa-5750', name: '5750: Historical Program', tier: 'Non-CoRE' },
+  { id: 'fa-5512', name: '5512: Identification Cards', tier: 'Non-CoRE' },
+  { id: 'fa-5510-3', name: '5510.3: Information and Personnel Security Program (IPSP)', tier: 'CoRE' },
+  { id: 'fa-3800', name: '3800: Intelligence', tier: 'CoRE' },
+
+  { id: 'fa-5580', name: '5580: Law Enforcement Operations', tier: 'CoRE+' },
+  { id: 'fa-1050', name: '1050: Leave, Liberty and Administrative Absence', tier: 'Non-CoRE' },
+  { id: 'fa-5800-16-legal', name: '5800.16: Legal Administration', tier: 'CoRE' },
+  { id: 'fa-4790-2', name: '4790.2: Maintenance Management', tier: 'Non-CoRE' },
+  { id: 'fa-3501-1', name: '3501.1: Marine Corps Combat Readiness Evaluation', tier: 'CoRE+' },
+
+  { id: 'fa-5000-18', name: '5000.18: Marine Corps Fleet Bands', tier: 'CoRE+' },
+  { id: 'fa-1500-59', name: '1500.59: Marine Corps Martial Arts Program (MCMAP)', tier: 'CoRE' },
+  { id: 'fa-5100-29', name: '5100.29: Marine Corps Safety Management Systems (MCSMS)', tier: 'CoRE' },
+  { id: 'fa-1320', name: '1320: Marine Corps Sponsorship Program', tier: 'Non-CoRE' },
+  { id: 'fa-3574', name: '3574: Marksmanship Program', tier: 'Non-CoRE' },
+
+  { id: 'fa-1650', name: '1650: Military Awards', tier: 'CoRE' },
+  { id: 'fa-1640-1', name: '1640.1: Military Correctional Facilities', tier: 'CoRE+' },
+  { id: 'fa-5585-5', name: '5585.5: Military Working Dog (MWD) Operations', tier: 'CoRE+' },
+  { id: 'fa-11240-licensing', name: '11240: Motor Transport Licensing', tier: 'Non-CoRE' },
+  { id: 'fa-11240-operations', name: '11240: Motor Transport Operations', tier: 'Non-CoRE' },
+
+  { id: 'fa-3710-7', name: '3710.7: Naval Air Training and Operating Procedures Standardization (NATOPS)', tier: 'CoRE+' },
+  { id: 'fa-3070', name: '3070: Operations Security', tier: 'CoRE' },
+  { id: 'fa-3800-2', name: '3800.2: Oversight-Intel/Non-Intel Sensitive Activities', tier: 'CoRE' },
+  { id: 'fa-1610', name: '1610: Performance Evaluation System (PES)', tier: 'CoRE' },
+  { id: 'fa-1700-37', name: '1700.37: Personal Financial Management Program (PFMP)', tier: 'Non-CoRE' },
+
+  { id: 'fa-6100-13', name: '6100.13: Physical Fitness and Combat Fitness Program', tier: 'CoRE' },
+  { id: 'fa-1500-62', name: '1500.62: Physical Fitness Program and Force Fitness Instructor Program', tier: 'CoRE' },
+  { id: 'fa-5530', name: '5530: Physical Security', tier: 'CoRE' },
+  { id: 'fa-5110-1', name: '5110.1: Postal Affairs and Official Mail Program - Military Postal Activity', tier: 'CoRE+' },
+
+  { id: 'fa-5110-2', name: '5110.2: Postal Affairs and Official Mail Program - Organization', tier: 'CoRE' },
+  { id: 'fa-5354-1', name: '5354.1: Prohibited Activities and Conduct Prevention and Response Program (PAC)', tier: 'CoRE' },
+  { id: 'fa-3550-10', name: '3550.10: Range and Training Area Management', tier: 'Non-CoRE' },
+  { id: 'fa-5210', name: '5210: Records Management', tier: 'CoRE' },
+  { id: 'fa-1730', name: '1730: Religous Ministries', tier: 'Non-CoRE' }, // (spelling as listed on IGMC page)
+
+  { id: 'fa-5214', name: '5214: Reports Management', tier: 'Non-CoRE' },
+  { id: 'fa-1700-23', name: '1700.23: Request Mast Procedures', tier: 'CoRE' },
+  { id: 'fa-1900-16', name: '1900.16: Separation, Retirement and Limited Duty', tier: 'CoRE' },
+  { id: 'fa-1752-5', name: '1752.5: Sexual Assault Prevention and Response (SAPR)', tier: 'CoRE' },
+  { id: 'fa-1700-36', name: '1700.36: Single Marine Program (SMP)', tier: 'Non-CoRE' },
+
+  { id: 'fa-5300-17', name: '5300.17: Substance Assessment and Counseling Program', tier: 'CoRE' },
+  { id: 'fa-1720-1', name: '1720.1: Suicide Prevention Program', tier: 'CoRE' },
+  { id: 'fa-5060-20-sword', name: '5060.20: Sword Manual', tier: 'Non-CoRE' },
+  { id: 'fa-1700-31', name: '1700.31: Transition Readiness Program (TRP)', tier: 'CoRE' },
+  { id: 'fa-11000-1', name: '11000.1: Unaccompanied Housing', tier: 'CoRE' },
+  { id: 'fa-1020', name: '1020: Uniform Inspection', tier: 'Non-CoRE' },
+
+  { id: 'fa-3000-13', name: '3000.13: Unit Readiness', tier: 'CoRE' },
+  { id: 'fa-1553-3', name: '1553.3: Unit Training Management (UTM)', tier: 'CoRE' },
+  { id: 'fa-1754-9', name: '1754.9: Unit, Personal and Family Readiness Program (UPFRP)', tier: 'CoRE' },
+  { id: 'fa-5580-2', name: '5580.2: USMC Criminal Investigation Division (USMC CID) Operations', tier: 'CoRE+' },
+  { id: 'fa-5800-16-vwap', name: '5800.16: Victim and Witness Assistance Program (VWAP)', tier: 'CoRE' },
+
+  { id: 'fa-1742-1', name: '1742.1: Voting Assistance Program', tier: 'CoRE' },
+  { id: 'fa-1500-52', name: '1500.52: Water Survival Training Program', tier: 'CoRE' },
 ];
+
 
 // 2) Proposed GenAI Courses of Action (SAMPLE LABELS).
 //    If your prior chat has exact 4 names, replace these labels to match exactly.
