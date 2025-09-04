@@ -250,6 +250,55 @@ chatForm.addEventListener('submit', async (e) => {
     addMessage('Fetch failed: ' + err.message, 'agent');
   }
 });
+const sendBtn = chatForm.querySelector('button');
+
+chatForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const input = userInput.value.trim();
+  if (!input) return;
+
+  addMessage(input, 'user');
+  history.push({ role: 'user', text: input });
+  if (history.length > MAX_TURNS * 2) history.splice(0, history.length - MAX_TURNS * 2);
+  userInput.value = '';
+
+  sendBtn.disabled = true;            // <-- add
+  try {
+    const res = await fetch('https://chanfana-openapi-template.b-russell776977.workers.dev/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: input,
+        tier: tierSelect?.value,
+        fac: facSelect?.value,
+        facLabel: facSelect?.options[facSelect.selectedIndex]?.text || '',
+        coa: coaSelect?.value,
+        history
+      }),
+    });
+
+    const ct = res.headers.get('content-type') || '';
+    const payload = ct.includes('application/json') ? await res.json() : await res.text();
+
+    if (!res.ok) {
+      const msg = typeof payload === 'string'
+        ? payload
+        : (payload?.error?.message || payload?.message || JSON.stringify(payload, null, 2));
+      addMessage(`HTTP ${res.status} ${res.statusText}: ${msg}`, 'agent');
+      return;
+    }
+
+    const reply = payload.message ?? payload.output_text ?? '[No response]';
+    addMessage(reply, 'agent');
+    history.push({ role: 'assistant', text: reply });
+    if (history.length > MAX_TURNS * 2) history.splice(0, history.length - MAX_TURNS * 2);
+
+  } catch (err) {
+    addMessage('Fetch failed: ' + err.message, 'agent');
+  } finally {
+    sendBtn.disabled = false;         // <-- add
+  }
+});
 
   </script>
 </body>
