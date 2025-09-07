@@ -328,34 +328,15 @@ tierSelect.addEventListener('change', () => populateFACsByTier(tierSelect.value)
 
 // ===== END FAC/COA DATA & WIRING =====
 
-    function addMessage(text, sender) {
-      const msg = document.createElement('div');
-      msg.className = 'chat-message ' + sender;
-      msg.textContent = text;
-      chatHistory.appendChild(msg);
-      chatHistory.scrollTop = chatHistory.scrollHeight;
-    }
+function addMessage(text, sender) {
+  const msg = document.createElement('div');
+  msg.className = 'chat-message ' + sender;
+  msg.textContent = text;
+  chatHistory.appendChild(msg);
+  chatHistory.scrollTop = chatHistory.scrollHeight;
+}
 
-    const ct = res.headers.get('content-type') || '';
-    const payload = ct.includes('application/json') ? await res.json() : await res.text();
-
-    if (!res.ok) {
-      const msg = typeof payload === 'string'
-        ? payload
-        : (payload?.error?.message || payload?.message || JSON.stringify(payload, null, 2));
-      addMessage(`HTTP ${res.status} ${res.statusText}: ${msg}`, 'agent');
-      return;
-    }
-
-    const reply = payload.message ?? payload.output_text ?? '[No response]';
-    addMessage(reply, 'agent');
-    history.push({ role: 'assistant', text: reply });
-    if (history.length > MAX_TURNS * 2) history.splice(0, history.length - MAX_TURNS * 2);
-
-  } catch (err) {
-    addMessage('Fetch failed: ' + err.message, 'agent');
-  }
-});
+// ONE clean submit handler
 const sendBtn = chatForm.querySelector('button');
 
 chatForm.addEventListener('submit', async (e) => {
@@ -363,32 +344,35 @@ chatForm.addEventListener('submit', async (e) => {
   const input = userInput.value.trim();
   if (!input) return;
 
+  // show + record the user turn
   addMessage(input, 'user');
   history.push({ role: 'user', text: input });
   if (history.length > MAX_TURNS * 2) history.splice(0, history.length - MAX_TURNS * 2);
   userInput.value = '';
 
-  sendBtn.disabled = true;            // <-- add
+  // build binder-style label & clean FAC fields BEFORE fetch
+  const rawLabel = facSelect?.options[facSelect.selectedIndex]?.text || '';
+  const binderLabel = binderStyleLabel(rawLabel);
+  const { facCode, facNumber, facAcronym, facFamily } = extractFacCodeAndAcr(binderLabel);
+
+  sendBtn.disabled = true;
   try {
     const res = await fetch('https://chanfana-openapi-template.b-russell776977.workers.dev/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      const rawLabel = facSelect?.options[facSelect.selectedIndex]?.text || '';
-      const binderLabel = binderStyleLabel(rawLabel);
-      const { facCode, facNumber, facAcronym, facFamily } = extractFacCodeAndAcr(binderLabel);
-
       body: JSON.stringify({
         query: input,
         tier: tierSelect?.value,
-        fac: facSelect?.value,
-        facLabel: binderLabel,         // e.g., "Antiterrorism (AT) 3302"
-        facCode,                       // "3302"
-        facNumber,                     // "3302" or "3302.1" (if present)
-        facAcronym,                    // "AT" (if present)
-        facFamily,                     // ["3302","3302.1","3302.01"]
+        fac: facSelect?.value,                 // id: e.g., "fa-3302"
+        facLabel: binderLabel,                 // e.g., "Antiterrorism (AT) 3302"
+        facCode,                               // "3302"
+        facNumber,                             // "3302" or "3302.1"
+        facAcronym,                            // "AT" if present
+        facFamily,                             // ["3302","3302.1","3302.01"]
         coa: coaSelect?.value,
         history
       })
+    });
 
     const ct = res.headers.get('content-type') || '';
     const payload = ct.includes('application/json') ? await res.json() : await res.text();
@@ -405,11 +389,10 @@ chatForm.addEventListener('submit', async (e) => {
     addMessage(reply, 'agent');
     history.push({ role: 'assistant', text: reply });
     if (history.length > MAX_TURNS * 2) history.splice(0, history.length - MAX_TURNS * 2);
-
   } catch (err) {
     addMessage('Fetch failed: ' + err.message, 'agent');
   } finally {
-    sendBtn.disabled = false;         // <-- add
+    sendBtn.disabled = false;
   }
 });
 
