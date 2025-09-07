@@ -271,33 +271,36 @@ function populateCOAs() {
 }
 
 // Optional: a few known acronyms (add more as you discover them)
+// Optional acronyms map (extend as needed)
 const FAC_ACRONYMS = {
   'Antiterrorism': 'AT',
   'Operations Security': 'OPSEC',
   'Information and Personnel Security Program': 'IPSP',
-  'Prohibited Activities and Conduct Prevention and Response Program': 'PAC',
-  'Marine Corps Safety Management Systems': 'MCSMS',
-  'Defense Travel System': 'DTS',
-  'Government Travel Charge Card Program': 'GTCCP'
+  'Marine Corps Safety Management Systems (MCSMS)': 'MCSMS',
+  'Defense Travel System (DTS)': 'DTS',
+  'Government Travel Charge Card Program (GTCCP)': 'GTCCP'
 };
 
 // Turn "3302: Antiterrorism" → "Antiterrorism (AT) 3302"
 function binderStyleLabel(name) {
-  // If the name already looks like "... ####" just return it
-  if (/\b\d{3,4}(?:\.\d+)?$/.test(name)) return name;
-
-  // Match "####" or "####.##: Title"
+  if (/\b\d{3,4}(?:\.\d+)?$/.test(name)) return name;        // already binder-ish
   const m = name.match(/^(\d{3,4}(?:\.\d+)?):\s*(.+)$/);
   if (!m) return name;
-
   const num = m[1];
   const rawTitle = m[2].trim();
-  // Strip any existing (...) to avoid duplicates, keep a discovered acronym if present
   const existingAcro = (rawTitle.match(/\(([A-Z]{2,})\)/) || [])[1];
   const titleBase = rawTitle.replace(/\s*\([^)]+\)\s*/g, '').trim();
   const acro = existingAcro || FAC_ACRONYMS[titleBase];
-
   return acro ? `${titleBase} (${acro}) ${num}` : `${titleBase} ${num}`;
+}
+
+// Extract number + acronym + dotted variants from the final label
+function extractFacCodeAndAcr(labelText) {
+  const num = (labelText.match(/\b\d{3,4}(?:\.\d+)?\b/) || [])[0] || '';
+  const acr = (labelText.match(/\(([A-Z]{2,})\)/) || [])[1] || '';
+  const base = num.replace(/\.\d+$/, '');
+  const fam = Array.from(new Set([num, base, `${base}.1`, `${base}.01`].filter(Boolean)));
+  return { facCode: base, facNumber: num, facAcronym: acr, facFamily: fam };
 }
 
 function populateFACsByTier(tier) {
@@ -312,14 +315,12 @@ function populateFACsByTier(tier) {
   }
   for (const f of options) {
     const opt = document.createElement('option');
-    opt.value = f.id;                             // send id (fa-####) as before
-    opt.textContent = binderStyleLabel(f.name);   // <-- send binder-like label
+    opt.value = f.id;                               // id (fa-####)
+    opt.textContent = binderStyleLabel(f.name);     // binder-style text
     facSelect.appendChild(opt);
   }
 }
-
-
-
+    
 // Init defaults (Tier defaults to CoRE)
 populateCOAs();
 populateFACsByTier(tierSelect.value);
@@ -372,15 +373,22 @@ chatForm.addEventListener('submit', async (e) => {
     const res = await fetch('https://chanfana-openapi-template.b-russell776977.workers.dev/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      const rawLabel = facSelect?.options[facSelect.selectedIndex]?.text || '';
+      const binderLabel = binderStyleLabel(rawLabel);
+      const { facCode, facNumber, facAcronym, facFamily } = extractFacCodeAndAcr(binderLabel);
+
       body: JSON.stringify({
         query: input,
         tier: tierSelect?.value,
         fac: facSelect?.value,
-        facLabel: facSelect?.options[facSelect.selectedIndex]?.text || '',
+        facLabel: binderLabel,         // e.g., "Antiterrorism (AT) 3302"
+        facCode,                       // "3302"
+        facNumber,                     // "3302" or "3302.1" (if present)
+        facAcronym,                    // "AT" (if present)
+        facFamily,                     // ["3302","3302.1","3302.01"]
         coa: coaSelect?.value,
         history
-      }),
-    });
+      })
 
     const ct = res.headers.get('content-type') || '';
     const payload = ct.includes('application/json') ? await res.json() : await res.text();
