@@ -270,6 +270,36 @@ function populateCOAs() {
   });
 }
 
+// Optional: a few known acronyms (add more as you discover them)
+const FAC_ACRONYMS = {
+  'Antiterrorism': 'AT',
+  'Operations Security': 'OPSEC',
+  'Information and Personnel Security Program': 'IPSP',
+  'Prohibited Activities and Conduct Prevention and Response Program': 'PAC',
+  'Marine Corps Safety Management Systems': 'MCSMS',
+  'Defense Travel System': 'DTS',
+  'Government Travel Charge Card Program': 'GTCCP'
+};
+
+// Turn "3302: Antiterrorism" → "Antiterrorism (AT) 3302"
+function binderStyleLabel(name) {
+  // If the name already looks like "... ####" just return it
+  if (/\b\d{3,4}(?:\.\d+)?$/.test(name)) return name;
+
+  // Match "####" or "####.##: Title"
+  const m = name.match(/^(\d{3,4}(?:\.\d+)?):\s*(.+)$/);
+  if (!m) return name;
+
+  const num = m[1];
+  const rawTitle = m[2].trim();
+  // Strip any existing (...) to avoid duplicates, keep a discovered acronym if present
+  const existingAcro = (rawTitle.match(/\(([A-Z]{2,})\)/) || [])[1];
+  const titleBase = rawTitle.replace(/\s*\([^)]+\)\s*/g, '').trim();
+  const acro = existingAcro || FAC_ACRONYMS[titleBase];
+
+  return acro ? `${titleBase} (${acro}) ${num}` : `${titleBase} ${num}`;
+}
+
 function populateFACsByTier(tier) {
   const options = FAC_INDEX.filter(f => f.tier === tier);
   facSelect.innerHTML = '';
@@ -282,11 +312,13 @@ function populateFACsByTier(tier) {
   }
   for (const f of options) {
     const opt = document.createElement('option');
-    opt.value = f.id;                         // send id to backend
-    opt.textContent = f.name;                 // show label to user
+    opt.value = f.id;                             // send id (fa-####) as before
+    opt.textContent = binderStyleLabel(f.name);   // <-- send binder-like label
     facSelect.appendChild(opt);
   }
 }
+
+
 
 // Init defaults (Tier defaults to CoRE)
 populateCOAs();
@@ -302,32 +334,6 @@ tierSelect.addEventListener('change', () => populateFACsByTier(tierSelect.value)
       chatHistory.appendChild(msg);
       chatHistory.scrollTop = chatHistory.scrollHeight;
     }
-
-chatForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const input = userInput.value.trim();
-  if (!input) return;
-
-  // show + record the user turn
-  addMessage(input, 'user');
-  history.push({ role: 'user', text: input });
-  if (history.length > MAX_TURNS * 2) history.splice(0, history.length - MAX_TURNS * 2);
-
-  userInput.value = '';
-
-  try {
-    const res = await fetch('https://chanfana-openapi-template.b-russell776977.workers.dev/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: input,
-        tier: tierSelect?.value,
-        fac: facSelect?.value,
-        facLabel: facSelect?.options[facSelect.selectedIndex]?.text || '',
-        coa: coaSelect?.value,
-        history                // <— include conversation so far
-      }),
-    });
 
     const ct = res.headers.get('content-type') || '';
     const payload = ct.includes('application/json') ? await res.json() : await res.text();
