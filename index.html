@@ -5,7 +5,6 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CGIP FAC Assistant Interface</title>
-  <!-- You can use a CDN for Material UI or your preferred CSS framework -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mui/material@5.14.6/dist/material.min.css" />
   <style>
@@ -97,35 +96,27 @@
     <button style="background:transparent;border:none;color:#fff;cursor:pointer;font-size:1rem;">Logout</button>
   </div>
   <div class="main-container">
-    <!-- Filters -->
-<div class="filters" style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;">
-  <div style="flex:1;min-width:180px">
-    <label for="tier-select" style="display:block;font-weight:700;margin-bottom:.25rem;">FAC Tier</label>
-    <select id="tier-select" style="width:100%;padding:.5rem;border:1px solid #b0b0b0;border-radius:4px;">
-      <option value="CoRE" selected>CoRE</option>
-      <option value="CoRE+">CoRE+</option>
-      <option value="Non-CoRE">Non-CoRE</option>
-    </select>
-  </div>
-
-  <div style="flex:2;min-width:240px">
-    <label for="fac-select" style="display:block;font-weight:700;margin-bottom:.25rem;">FAC</label>
-    <select id="fac-select" style="width:100%;padding:.5rem;border:1px solid #b0b0b0;border-radius:4px;">
-      <!-- populated by JS based on Tier -->
-    </select>
-  </div>
-
-  <div style="flex:1;min-width:220px">
-    <label for="coa-select" style="display:block;font-weight:700;margin-bottom:.25rem;">Persona</label>
-    <select id="coa-select" style="width:100%;padding:.5rem;border:1px solid #b0b0b0;border-radius:4px;">
-      <!-- populated by JS -->
-    </select>
-  </div>
-</div>
-
-    <div class="chat-history" id="chat-history">
-      <!-- Messages will appear here -->
+    <div class="filters" style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;">
+      <div style="flex:1;min-width:180px">
+        <label for="tier-select" style="display:block;font-weight:700;margin-bottom:.25rem;">FAC Tier</label>
+        <select id="tier-select" style="width:100%;padding:.5rem;border:1px solid #b0b0b0;border-radius:4px;">
+          <option value="CoRE" selected>CoRE</option>
+          <option value="CoRE+">CoRE+</option>
+          <option value="Non-CoRE">Non-CoRE</option>
+        </select>
+      </div>
+      <div style="flex:2;min-width:240px">
+        <label for="fac-select" style="display:block;font-weight:700;margin-bottom:.25rem;">FAC</label>
+        <select id="fac-select" style="width:100%;padding:.5rem;border:1px solid #b0b0b0;border-radius:4px;">
+        </select>
+      </div>
+      <div style="flex:1;min-width:220px">
+        <label for="coa-select" style="display:block;font-weight:700;margin-bottom:.25rem;">Persona</label>
+        <select id="coa-select" style="width:100%;padding:.5rem;border:1px solid #b0b0b0;border-radius:4px;">
+        </select>
+      </div>
     </div>
+    <div class="chat-history" id="chat-history"></div>
     <form class="chat-input-area" id="chat-form" autocomplete="off">
       <textarea id="user-input" rows="2" placeholder="Type your question for the Assistant..." required></textarea>
       <button type="submit">Send</button>
