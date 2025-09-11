@@ -73,7 +73,7 @@ async function populateFACsByTier(tier) {
       const opt = document.createElement('option');
       opt.value = f.id;
       opt.textContent = binderStyleLabel(f.name);
-      opt.dataset.url = f.docx_url; // Store DOCX URL for submission
+      opt.dataset.url = f.docx_url;
       facSelect.appendChild(opt);
     }
   } catch (err) {
