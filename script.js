@@ -1,3 +1,4 @@
+<script>
 const chatHistory = document.getElementById('chat-history');
     const chatForm = document.getElementById('chat-form');
     const userInput = document.getElementById('user-input');
@@ -261,3 +262,4 @@ chatForm.addEventListener('submit', async (e) => {
     sendBtn.disabled = false;
   }
 });
+</script>
