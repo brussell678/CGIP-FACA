@@ -1,5 +1,3 @@
-<html lang="en">
-<script>
     const chatHistory = document.getElementById('chat-history');
     const chatForm = document.getElementById('chat-form');
     const userInput = document.getElementById('user-input');
