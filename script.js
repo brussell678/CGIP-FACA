@@ -1,5 +1,6 @@
+<html lang="en">
 <script>
-const chatHistory = document.getElementById('chat-history');
+    const chatHistory = document.getElementById('chat-history');
     const chatForm = document.getElementById('chat-form');
     const userInput = document.getElementById('user-input');
     // Keep the last ~12 turns to control token usage
@@ -263,3 +264,4 @@ chatForm.addEventListener('submit', async (e) => {
   }
 });
 </script>
+    </html>
