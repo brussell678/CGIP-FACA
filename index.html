@@ -8,13 +8,18 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mui/material@5.14.6/dist/material.min.css" />
   <style>
+	:root {
+	--usmc-scarlet: #AF1E2D;
+	--usmc-gold: #F2A900;
+	--navy-900: #1e2a37;
+	}
     body {
       margin: 0;
       font-family: 'Roboto', Arial, sans-serif;
       background: #f8f9fa;
     }
     .header {
-      background: #1e2a37;
+      background: var(--navy-900);
       color: #fff;
       padding: 1rem 2rem;
       display: flex;
@@ -36,8 +41,17 @@
       border: 1px solid #e0e0e0;
       border-radius: 4px;
       padding: 1rem;
+	  position: relative;
       background: #f5f7fa;
     }
+	.chat-history::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: url('usmc-logo.png') center/180px no-repeat;
+	opacity: 0.06; /* faint watermark */
+	pointer-events: none;
+	}
     .chat-message { 
       white-space: pre-wrap; 
     }
@@ -70,7 +84,7 @@
     }
     .chat-input-area button {
       padding: 0.75rem 1.5rem;
-      background: #205081;
+      background: var(--usmc-scarlet);
       color: #fff;
       border: none;
       border-radius: 4px;
@@ -79,7 +93,7 @@
       cursor: pointer;
     }
     .chat-input-area button:hover {
-      background: #17355f;
+      background: #8f1824;
     }
     @media (max-width: 600px) {
       .main-container { padding: 1rem; }
