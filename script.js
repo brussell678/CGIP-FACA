@@ -162,19 +162,21 @@ document.addEventListener('DOMContentLoaded', () => {
       const res = await fetch('https://chanfana-openapi-template.b-russell776977.workers.dev/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: input,
-          tier: tierSelect?.value,
-          fac: facSelect?.value,
-          facLabel: binderLabel,
-          facCode,
-          facNumber,
-          facAcronym,
-          facFamily,
-          coa: coaSelect?.value,
-          docx_url: docxUrl,
-          history
-        })
+		body: JSON.stringify({
+		  query: input,
+		  tier: tierSelect?.value,
+		  fac: facSelect?.value,           // still okay to send; backend can use it
+		  facLabel: binderLabel,
+		  facCode,
+		  facNumber,
+		  fac_number: facNumber,           // <-- add this
+		  facAcronym,
+		  facFamily,
+		  persona: coaSelect?.value,       // <-- optional: align naming with backend
+		  coa: coaSelect?.value,           // kept for backward compat
+		  docx_url: docxUrl,
+		  history
++		})
       });
 
       console.log('POST response status:', res.status);
