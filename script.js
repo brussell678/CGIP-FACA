@@ -178,7 +178,7 @@ async function populateFACsByTier(tier) {
 		  coa: coaSelect?.value,           // kept for backward compat
 		  docx_url: docxUrl,
 		  history
-+		})
+		})
       });
 
       console.log('POST response status:', res.status);
