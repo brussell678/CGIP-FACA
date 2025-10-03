@@ -107,12 +107,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const res = await fetch('https://chanfana-openapi-template.b-russell776977.workers.dev/igmc/last-updated');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      const when = data.lastModified
-        ? new Date(data.lastModified).toLocaleString()
-        : 'Unavailable';
+      const when = data.pageUpdatedOn || 'Unavailable';
       footerEl.innerHTML = `
         <span style="opacity:.85">
-          IGMC FAC site last updated: <strong>${when}</strong>
+          IGMC FAC site page updated on: <strong>${when}</strong>
           &nbsp;|&nbsp;
           <a href="${data.source}" target="_blank" rel="noopener" style="color:var(--usmc-scarlet);text-decoration:none;">View FACs</a>
         </span>`;
@@ -120,6 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
       footerEl.textContent = 'IGMC FAC site last updated: Unavailable';
     }
   }
+
   loadIGMCStamp();
 
   function addMessage(text, sender) {
