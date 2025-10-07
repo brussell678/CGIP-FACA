@@ -68,43 +68,52 @@ document.addEventListener('DOMContentLoaded', () => {
     return { facCode: base, facNumber: num, facAcronym: acr, facFamily: fam };
   }
 
-// In script.js (Updated to keep backend fetch for static_facs)
-
-// In script.js (Updated to keep backend fetch for static_facs)
-
-async function populateFACsByTier(tier) {
-  console.log('Fetching FACs for tier:', tier);
-  facSelect.innerHTML = '<option>Loading FACs...</option>';
-  try {
-    const res = await fetch('https://cgip-fac-assistant.b-russell776977.workers.dev/areas');
-    console.log('Fetch response status:', res.status);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const areas = await res.json();
-    console.log('Received', areas.length, 'FACs');
-    const options = areas.filter(f => f.tier === tier);
-    console.log('Filtered', options.length, 'FACs for tier', tier);
-    facSelect.innerHTML = '';
-    if (options.length === 0) {
-      const opt = document.createElement('option');
-      opt.value = '';
-      opt.textContent = 'No FACs for this tier';
-      facSelect.appendChild(opt);
-      console.log('No FACs for tier', tier);
-      return;
+  async function populateFACsByTier(tier) {
+    console.log('Fetching FACs for tier:', tier);
+    facSelect.innerHTML = '<option>Loading FACs...</option>';
+    try {
+      const res = await fetch('https://cgip-fac-assistant.b-russell776977.workers.dev/areas');
+      console.log('Fetch response status:', res.status);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const areas = await res.json();
+      console.log('Received', areas.length, 'category groups');
+      
+      // Flatten facs from all categories
+      let allFacs = [];
+      areas.forEach(group => {
+        if (group.facs && Array.isArray(group.facs)) {
+          allFacs.push(...group.facs);
+        }
+      });
+      console.log('Flattened', allFacs.length, 'total FACs');
+      
+      // Filter by tier
+      const options = allFacs.filter(f => f.tier === tier);
+      console.log('Filtered', options.length, 'FACs for tier', tier);
+      
+      facSelect.innerHTML = '';
+      if (options.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'No FACs for this tier';
+        facSelect.appendChild(opt);
+        console.log('No FACs for tier', tier);
+        return;
+      }
+      for (const f of options) {
+        const opt = document.createElement('option');
+        opt.value = f.id;
+        opt.textContent = binderStyleLabel(f.name);
+        opt.dataset.url = f.docx_url;
+        facSelect.appendChild(opt);
+      }
+      console.log('FAC dropdown populated with', options.length, 'options');
+    } catch (err) {
+      console.error('Failed to load FACs:', err);
+      facSelect.innerHTML = '<option>Error loading FACs</option>';
     }
-    for (const f of options) {
-      const opt = document.createElement('option');
-      opt.value = f.id;
-      opt.textContent = binderStyleLabel(f.name);
-      opt.dataset.url = f.docx_url;
-      facSelect.appendChild(opt);
-    }
-    console.log('FAC dropdown populated with', options.length, 'options');
-  } catch (err) {
-    console.error('Failed to load FACs:', err);
-    facSelect.innerHTML = '<option>Error loading FACs</option>';
   }
-}
+
   const footerEl = document.getElementById('igmc-footer');
   async function loadIGMCStamp() {
     try {
@@ -166,21 +175,21 @@ async function populateFACsByTier(tier) {
       const res = await fetch('https://cgip-fac-assistant.b-russell776977.workers.dev', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({
-		  query: input,
-		  tier: tierSelect?.value,
-		  fac: facSelect?.value,           // still okay to send; backend can use it
-		  facLabel: binderLabel,
-		  facCode,
-		  facNumber,
-		  fac_number: facNumber,           // <-- add this
-		  facAcronym,
-		  facFamily,
-		  persona: coaSelect?.value,       // <-- optional: align naming with backend
-		  coa: coaSelect?.value,           // kept for backward compat
-		  docx_url: docxUrl,
-		  history
-		})
+        body: JSON.stringify({
+          query: input,
+          tier: tierSelect?.value,
+          fac: facSelect?.value,           // still okay to send; backend can use it
+          facLabel: binderLabel,
+          facCode,
+          facNumber,
+          fac_number: facNumber,           // <-- add this
+          facAcronym,
+          facFamily,
+          persona: coaSelect?.value,       // <-- optional: align naming with backend
+          coa: coaSelect?.value,           // kept for backward compat
+          docx_url: docxUrl,
+          history
+        })
       });
 
       console.log('POST response status:', res.status);
