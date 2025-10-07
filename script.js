@@ -70,6 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // In script.js (Updated to keep backend fetch for static_facs)
 
+// In script.js (Updated to keep backend fetch for static_facs)
+
 async function populateFACsByTier(tier) {
   console.log('Fetching FACs for tier:', tier);
   facSelect.innerHTML = '<option>Loading FACs...</option>';
