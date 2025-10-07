@@ -200,11 +200,12 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error(`HTTP ${res.status} ${res.statusText}: ${msg}`);
       }
 
-      const data = await res.json();
-      const reply = data.message ?? data.output_text ?? '[No response]';
-      addMessage(reply, 'agent');
-      history.push({ role: 'assistant', text: reply });
-      if (history.length > MAX_TURNS * 2) history.splice(0, history.length - MAX_TURNS * 2);
+	  const data = await res.json();
+	  console.log('Full response data:', data); // Debug log
+	  const reply = data.answer ?? data.error ?? '[No response]'; // Use 'answer'; fallback to error if present
+	  addMessage(reply, 'agent');
+	  history.push({ role: 'assistant', text: reply });
+	  if (history.length > MAX_TURNS * 2) history.splice(0, history.length - MAX_TURNS * 2);
     } catch (err) {
       console.error('Fetch error:', err);
       addMessage('Fetch failed: ' + err.message, 'agent');
