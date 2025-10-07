@@ -76,7 +76,7 @@ async function populateFACsByTier(tier) {
   console.log('Fetching FACs for tier:', tier);
   facSelect.innerHTML = '<option>Loading FACs...</option>';
   try {
-    const res = await fetch('https://chanfana-openapi-template.b-russell776977.workers.dev/areas');
+    const res = await fetch('https://cgip-fac-assistant.b-russell776977.workers.dev/areas');
     console.log('Fetch response status:', res.status);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const areas = await res.json();
@@ -108,7 +108,7 @@ async function populateFACsByTier(tier) {
   const footerEl = document.getElementById('igmc-footer');
   async function loadIGMCStamp() {
     try {
-      const res = await fetch('https://chanfana-openapi-template.b-russell776977.workers.dev/igmc/last-updated');
+      const res = await fetch('https://cgip-fac-assistant.b-russell776977.workers.dev/igmc/last-updated');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const when = data.pageUpdatedOn || 'Unavailable';
@@ -163,7 +163,7 @@ async function populateFACsByTier(tier) {
 
     sendBtn.disabled = true;
     try {
-      const res = await fetch('https://chanfana-openapi-template.b-russell776977.workers.dev/', {
+      const res = await fetch('https://cgip-fac-assistant.b-russell776977.workers.dev', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({
