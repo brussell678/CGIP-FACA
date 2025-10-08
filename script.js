@@ -7,9 +7,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const coaSelect = document.getElementById('coa-select');
   const history = [];
   const MAX_TURNS = 12;
-// Add this function near the top of script.js (after const definitions)
+// Updated toTitleCase: Title case base, preserve uppercase acronyms in parens
 function toTitleCase(str) {
-  return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+  // Title case the entire string first
+  let titled = str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+  
+  // Detect and uppercase content inside parentheses if acronym-like (all caps, short)
+  titled = titled.replace(/\(([^)]+)\)/g, (match, content) => {
+    // If content is all uppercase or looks like acronym (e.g., DTS, GTCCP), preserve upper
+    if (content === content.toUpperCase() || /^[A-Z]{2,}$/.test(content.replace(/[^A-Z]/g, ''))) {
+      return `(${content.toUpperCase()})`;
+    }
+    return match; // Else, keep as-is
+  });
+  
+  return titled;
 }
   // Check for missing DOM elements
   if (!chatHistory || !chatForm || !userInput || !tierSelect || !facSelect || !coaSelect) {
