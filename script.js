@@ -90,7 +90,10 @@ async function populateFACsByTier(tier) {
   try {
     const res = await fetch('https://cgip-fac-assistant.b-russell776977.workers.dev/areas');
     console.log('Fetch response status:', res.status);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) {
+      const payload = await res.json().catch(() => ({ error: 'Unknown' }));
+      throw new Error(`HTTP ${res.status}: ${payload.error || 'Unknown error'}`);
+    }
     const areas = await res.json();
     console.log('Received', areas.length, 'category groups');
     
@@ -128,7 +131,7 @@ async function populateFACsByTier(tier) {
     console.log('FAC dropdown populated with', options.length, 'options');
   } catch (err) {
     console.error('Error loading FACs:', err);
-    facSelect.innerHTML = '<option>Error loading FACs</option>';
+    facSelect.innerHTML = `<option>Error: ${err.message}</option>`;
   }
 }
 
