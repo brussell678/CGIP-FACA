@@ -7,7 +7,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const coaSelect = document.getElementById('coa-select');
   const history = [];
   const MAX_TURNS = 12;
-
+// Add this function near the top of script.js (after const definitions)
+function toTitleCase(str) {
+  return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+}
   // Check for missing DOM elements
   if (!chatHistory || !chatForm || !userInput || !tierSelect || !facSelect || !coaSelect) {
     console.error('Missing DOM elements:', {
@@ -68,51 +71,54 @@ document.addEventListener('DOMContentLoaded', () => {
     return { facCode: base, facNumber: num, facAcronym: acr, facFamily: fam };
   }
 
-  async function populateFACsByTier(tier) {
-    console.log('Fetching FACs for tier:', tier);
-    facSelect.innerHTML = '<option>Loading FACs...</option>';
-    try {
-      const res = await fetch('https://cgip-fac-assistant.b-russell776977.workers.dev/areas');
-      console.log('Fetch response status:', res.status);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const areas = await res.json();
-      console.log('Received', areas.length, 'category groups');
-      
-      // Flatten facs from all categories
-      let allFacs = [];
-      areas.forEach(group => {
-        if (group.facs && Array.isArray(group.facs)) {
-          allFacs.push(...group.facs);
-        }
-      });
-      console.log('Flattened', allFacs.length, 'total FACs');
-      
-      // Filter by tier
-      const options = allFacs.filter(f => f.tier === tier);
-      console.log('Filtered', options.length, 'FACs for tier', tier);
-      
-      facSelect.innerHTML = '';
-      if (options.length === 0) {
-        const opt = document.createElement('option');
-        opt.value = '';
-        opt.textContent = 'No FACs for this tier';
-        facSelect.appendChild(opt);
-        console.log('No FACs for tier', tier);
-        return;
+ // Updated populateFACsByTier (replace existing)
+async function populateFACsByTier(tier) {
+  console.log('Fetching FACs for tier:', tier);
+  facSelect.innerHTML = '<option>Loading FACs...</option>';
+  try {
+    const res = await fetch('https://cgip-fac-assistant.b-russell776977.workers.dev/areas');
+    console.log('Fetch response status:', res.status);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const areas = await res.json();
+    console.log('Received', areas.length, 'category groups');
+    
+    // Flatten facs from all categories
+    let allFacs = [];
+    areas.forEach(group => {
+      if (group.facs && Array.isArray(group.facs)) {
+        allFacs.push(...group.facs);
       }
-      for (const f of options) {
-        const opt = document.createElement('option');
-        opt.value = f.id;
-        opt.textContent = binderStyleLabel(f.name);
-        opt.dataset.url = f.docx_url;
-        facSelect.appendChild(opt);
-      }
-      console.log('FAC dropdown populated with', options.length, 'options');
-    } catch (err) {
-      console.error('Failed to load FACs:', err);
-      facSelect.innerHTML = '<option>Error loading FACs</option>';
+    });
+    console.log('Flattened', allFacs.length, 'total FACs');
+    
+    // Filter by tier
+    const options = allFacs.filter(f => f.tier === tier);
+    console.log('Filtered', options.length, 'FACs for tier', tier);
+    
+    facSelect.innerHTML = '';
+    if (options.length === 0) {
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'No FACs for this tier';
+      facSelect.appendChild(opt);
+      console.log('No FACs for tier', tier);
+      return;
     }
+    
+    options.sort((a, b) => a.name.localeCompare(b.name));
+    options.forEach(fac => {
+      const opt = document.createElement('option');
+      opt.value = fac.id;
+      opt.textContent = toTitleCase(fac.name); // Standardize to title case
+      opt.dataset.url = fac.docx_url || '';
+      facSelect.appendChild(opt);
+    });
+    console.log('FAC dropdown populated with', options.length, 'options');
+  } catch (err) {
+    console.error('Error loading FACs:', err);
+    facSelect.innerHTML = '<option>Error loading FACs</option>';
   }
+}
 
   const footerEl = document.getElementById('igmc-footer');
   async function loadIGMCStamp() {
