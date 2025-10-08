@@ -7,18 +7,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const coaSelect = document.getElementById('coa-select');
   const history = [];
   const MAX_TURNS = 12;
-// Updated toTitleCase: Title case base, preserve uppercase acronyms in parens
+// Updated toTitleCase: Title case base, always uppercase acronym-like content in parens (2+ letters, no spaces)
 function toTitleCase(str) {
   // Title case the entire string first
   let titled = str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
   
-  // Detect and uppercase content inside parentheses if acronym-like (all caps, short)
+  // Detect and uppercase content inside parentheses if acronym-like
   titled = titled.replace(/\(([^)]+)\)/g, (match, content) => {
-    // If content is all uppercase or looks like acronym (e.g., DTS, GTCCP), preserve upper
-    if (content === content.toUpperCase() || /^[A-Z]{2,}$/.test(content.replace(/[^A-Z]/g, ''))) {
+    content = content.trim();
+    // Remove non-letters for check
+    const cleaned = content.replace(/[^A-Za-z]/g, '');
+    // If 2+ letters, no spaces, and letter-based (acronym)
+    if (cleaned.length >= 2 && !/\s/.test(content) && /^[A-Za-z]{2,}$/.test(cleaned)) {
       return `(${content.toUpperCase()})`;
     }
-    return match; // Else, keep as-is
+    return match; // Else, keep as-is (e.g., phrases with spaces)
   });
   
   return titled;
@@ -83,7 +86,7 @@ function toTitleCase(str) {
     return { facCode: base, facNumber: num, facAcronym: acr, facFamily: fam };
   }
 
-// Updated populateFACsByTier (replace existing)
+ // Updated populateFACsByTier (replace existing)
 async function populateFACsByTier(tier) {
   console.log('Fetching FACs for tier:', tier);
   facSelect.innerHTML = '<option>Loading FACs...</option>';
