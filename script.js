@@ -83,7 +83,7 @@ function toTitleCase(str) {
     return { facCode: base, facNumber: num, facAcronym: acr, facFamily: fam };
   }
 
- // Updated populateFACsByTier (replace existing)
+// Updated populateFACsByTier (replace existing)
 async function populateFACsByTier(tier) {
   console.log('Fetching FACs for tier:', tier);
   facSelect.innerHTML = '<option>Loading FACs...</option>';
@@ -120,15 +120,26 @@ async function populateFACsByTier(tier) {
       return;
     }
     
-    options.sort((a, b) => a.name.localeCompare(b.name));
-    options.forEach(fac => {
+    // Dedup by id (use Set for unique ids)
+    const uniqueFacs = [];
+    const seenIds = new Set();
+    options.sort((a, b) => a.name.localeCompare(b.name)).forEach(fac => {
+      if (!seenIds.has(fac.id)) {
+        seenIds.add(fac.id);
+        uniqueFacs.push(fac);
+      } else {
+        console.log(`Skipping duplicate FAC: ${fac.id}`);
+      }
+    });
+    
+    uniqueFacs.forEach(fac => {
       const opt = document.createElement('option');
       opt.value = fac.id;
       opt.textContent = toTitleCase(fac.name); // Standardize to title case
       opt.dataset.url = fac.docx_url || '';
       facSelect.appendChild(opt);
     });
-    console.log('FAC dropdown populated with', options.length, 'options');
+    console.log('FAC dropdown populated with', uniqueFacs.length, 'unique options');
   } catch (err) {
     console.error('Error loading FACs:', err);
     facSelect.innerHTML = `<option>Error: ${err.message}</option>`;
