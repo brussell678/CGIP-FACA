@@ -95,6 +95,16 @@
     .chat-input-area button:hover {
       background: #8f1824;
     }
+	.chat-input-area button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background: #ccc; /* Gray out for visual disable */
+    }
+    .thinking {
+      color: #666;
+      font-style: italic;
+      text-align: center;
+    }
     @media (max-width: 600px) {
       .main-container { padding: 1rem; }
       .header { flex-direction: column; gap: 0.5rem; padding: 1rem; }
