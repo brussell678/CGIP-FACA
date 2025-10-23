@@ -168,12 +168,20 @@ async function populateFACsByTier(tier) {
   }
 
   loadIGMCStamp();
-
+  function linkify(text) {
+    const urlRegex = /(https?:\/\/[^\s]+)/g; // Simple URL matcher
+    return text.replace(urlRegex, url => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
+  }
+	
   function addMessage(text, sender) {
     console.log('Adding message:', { text, sender });
     const msg = document.createElement('div');
     msg.className = 'chat-message ' + sender;
-    msg.textContent = text;
+    if (sender === 'agent') {
+      msg.innerHTML = linkify(text); // Make links clickable for AI responses
+    } else {
+      msg.textContent = text;
+    }
     chatHistory.appendChild(msg);
     chatHistory.scrollTop = chatHistory.scrollHeight;
   }
