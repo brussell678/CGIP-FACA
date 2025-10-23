@@ -7,25 +7,27 @@ document.addEventListener('DOMContentLoaded', () => {
   const coaSelect = document.getElementById('coa-select');
   const history = [];
   const MAX_TURNS = 12;
-// Updated toTitleCase: Title case base, always uppercase acronym-like content in parens (2+ letters, no spaces)
-function toTitleCase(str) {
-  // Title case the entire string first
-  let titled = str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
-  
-  // Detect and uppercase content inside parentheses if acronym-like
-  titled = titled.replace(/\(([^)]+)\)/g, (match, content) => {
-    content = content.trim();
-    // Remove non-letters for check
-    const cleaned = content.replace(/[^A-Za-z]/g, '');
-    // If 2+ letters, no spaces, and letter-based (acronym)
-    if (cleaned.length >= 2 && !/\s/.test(content) && /^[A-Za-z]{2,}$/.test(cleaned)) {
-      return `(${content.toUpperCase()})`;
-    }
-    return match; // Else, keep as-is (e.g., phrases with spaces)
-  });
-  
-  return titled;
-}
+
+  // Updated toTitleCase: Title case base, always uppercase acronym-like content in parens (2+ letters, no spaces)
+  function toTitleCase(str) {
+    // Title case the entire string first
+    let titled = str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+    
+    // Detect and uppercase content inside parentheses if acronym-like
+    titled = titled.replace(/\(([^)]+)\)/g, (match, content) => {
+      content = content.trim();
+      // Remove non-letters for check
+      const cleaned = content.replace(/[^A-Za-z]/g, '');
+      // If 2+ letters, no spaces, and letter-based (acronym)
+      if (cleaned.length >= 2 && !/\s/.test(content) && /^[A-Za-z]{2,}$/.test(cleaned)) {
+        return `(${content.toUpperCase()})`;
+      }
+      return match; // Else, keep as-is (e.g., phrases with spaces)
+    });
+    
+    return titled;
+  }
+
   // Check for missing DOM elements
   if (!chatHistory || !chatForm || !userInput || !tierSelect || !facSelect || !coaSelect) {
     console.error('Missing DOM elements:', {
@@ -86,68 +88,68 @@ function toTitleCase(str) {
     return { facCode: base, facNumber: num, facAcronym: acr, facFamily: fam };
   }
 
- // Updated populateFACsByTier (replace existing)
-async function populateFACsByTier(tier) {
-  console.log('Fetching FACs for tier:', tier);
-  facSelect.innerHTML = '<option>Loading FACs...</option>';
-  try {
-    const res = await fetch('https://cgip-fac-assistant.b-russell776977.workers.dev/areas');
-    console.log('Fetch response status:', res.status);
-    if (!res.ok) {
-      const payload = await res.json().catch(() => ({ error: 'Unknown' }));
-      throw new Error(`HTTP ${res.status}: ${payload.error || 'Unknown error'}`);
-    }
-    const areas = await res.json();
-    console.log('Received', areas.length, 'category groups');
-    
-    // Flatten facs from all categories
-    let allFacs = [];
-    areas.forEach(group => {
-      if (group.facs && Array.isArray(group.facs)) {
-        allFacs.push(...group.facs);
+  // Updated populateFACsByTier (replace existing)
+  async function populateFACsByTier(tier) {
+    console.log('Fetching FACs for tier:', tier);
+    facSelect.innerHTML = '<option>Loading FACs...</option>';
+    try {
+      const res = await fetch('https://cgip-fac-assistant.b-russell776977.workers.dev/areas');
+      console.log('Fetch response status:', res.status);
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({ error: 'Unknown' }));
+        throw new Error(`HTTP ${res.status}: ${payload.error || 'Unknown error'}`);
       }
-    });
-    console.log('Flattened', allFacs.length, 'total FACs');
-    
-    // Filter by tier
-    const options = allFacs.filter(f => f.tier === tier);
-    console.log('Filtered', options.length, 'FACs for tier', tier);
-    
-    facSelect.innerHTML = '';
-    if (options.length === 0) {
-      const opt = document.createElement('option');
-      opt.value = '';
-      opt.textContent = 'No FACs for this tier';
-      facSelect.appendChild(opt);
-      console.log('No FACs for tier', tier);
-      return;
-    }
-    
-    // Dedup by id (use Set for unique ids)
-    const uniqueFacs = [];
-    const seenIds = new Set();
-    options.sort((a, b) => a.name.localeCompare(b.name)).forEach(fac => {
-      if (!seenIds.has(fac.id)) {
-        seenIds.add(fac.id);
-        uniqueFacs.push(fac);
-      } else {
-        console.log(`Skipping duplicate FAC: ${fac.id}`);
+      const areas = await res.json();
+      console.log('Received', areas.length, 'category groups');
+      
+      // Flatten facs from all categories
+      let allFacs = [];
+      areas.forEach(group => {
+        if (group.facs && Array.isArray(group.facs)) {
+          allFacs.push(...group.facs);
+        }
+      });
+      console.log('Flattened', allFacs.length, 'total FACs');
+      
+      // Filter by tier
+      const options = allFacs.filter(f => f.tier === tier);
+      console.log('Filtered', options.length, 'FACs for tier', tier);
+      
+      facSelect.innerHTML = '';
+      if (options.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'No FACs for this tier';
+        facSelect.appendChild(opt);
+        console.log('No FACs for tier', tier);
+        return;
       }
-    });
-    
-    uniqueFacs.forEach(fac => {
-      const opt = document.createElement('option');
-      opt.value = fac.id;
-      opt.textContent = toTitleCase(fac.name); // Standardize to title case
-      opt.dataset.url = fac.docx_url || '';
-      facSelect.appendChild(opt);
-    });
-    console.log('FAC dropdown populated with', uniqueFacs.length, 'unique options');
-  } catch (err) {
-    console.error('Error loading FACs:', err);
-    facSelect.innerHTML = `<option>Error: ${err.message}</option>`;
+      
+      // Dedup by id (use Set for unique ids)
+      const uniqueFacs = [];
+      const seenIds = new Set();
+      options.sort((a, b) => a.name.localeCompare(b.name)).forEach(fac => {
+        if (!seenIds.has(fac.id)) {
+          seenIds.add(fac.id);
+          uniqueFacs.push(fac);
+        } else {
+          console.log(`Skipping duplicate FAC: ${fac.id}`);
+        }
+      });
+      
+      uniqueFacs.forEach(fac => {
+        const opt = document.createElement('option');
+        opt.value = fac.id;
+        opt.textContent = toTitleCase(fac.name); // Standardize to title case
+        opt.dataset.url = fac.docx_url || '';
+        facSelect.appendChild(opt);
+      });
+      console.log('FAC dropdown populated with', uniqueFacs.length, 'unique options');
+    } catch (err) {
+      console.error('Error loading FACs:', err);
+      facSelect.innerHTML = `<option>Error: ${err.message}</option>`;
+    }
   }
-}
 
   const footerEl = document.getElementById('igmc-footer');
   async function loadIGMCStamp() {
@@ -168,11 +170,13 @@ async function populateFACsByTier(tier) {
   }
 
   loadIGMCStamp();
+
+  // Function to make URLs clickable
   function linkify(text) {
-    const urlRegex = /(https?:\/\/[^\s]+)/g; // Simple URL matcher
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
     return text.replace(urlRegex, url => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
   }
-	
+
   function addMessage(text, sender) {
     console.log('Adding message:', { text, sender });
     const msg = document.createElement('div');
@@ -205,11 +209,7 @@ async function populateFACsByTier(tier) {
     history.push({ role: 'user', text: input });
     if (history.length > MAX_TURNS * 2) history.splice(0, history.length - MAX_TURNS * 2);
     userInput.value = '';
-    const thinkingMsg = document.createElement('div');
-    thinkingMsg.className = 'chat-message agent thinking';
-    thinkingMsg.textContent = 'Thinking...'; // Or add a spinner: innerHTML = '<div class="spinner"></div>'; with CSS
-    chatHistory.appendChild(thinkingMsg);
-    chatHistory.scrollTop = chatHistory.scrollHeight;
+
     const rawLabel = facSelect?.options[facSelect.selectedIndex]?.text || '';
     const binderLabel = binderStyleLabel(rawLabel);
     const { facCode, facNumber, facAcronym, facFamily } = extractFacCodeAndAcr(binderLabel);
@@ -217,12 +217,18 @@ async function populateFACsByTier(tier) {
 
     console.log('Sending POST with:', { query: input, tier: tierSelect?.value, fac: facSelect?.value, docxUrl });
 
+    // Add thinking indicator
+    const thinkingMsg = document.createElement('div');
+    thinkingMsg.className = 'chat-message agent thinking';
+    thinkingMsg.textContent = 'Thinking...';
+    chatHistory.appendChild(thinkingMsg);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+
     sendBtn.disabled = true;
     try {
       const res = await fetch('https://cgip-fac-assistant.b-russell776977.workers.dev', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-		  
         body: JSON.stringify({
           query: input,
           tier: tierSelect?.value,
@@ -238,10 +244,7 @@ async function populateFACsByTier(tier) {
           docx_url: docxUrl,
           history
         })
-      const data = await res.json();
-      const reply = data.answer ?? data.error ?? '[No response]';
-      addMessage(reply, 'agent');
-	  });
+      });
 
       console.log('POST response status:', res.status);
       if (!res.ok) {
@@ -251,18 +254,20 @@ async function populateFACsByTier(tier) {
         throw new Error(`HTTP ${res.status} ${res.statusText}: ${msg}`);
       }
 
-	  const data = await res.json();
-	  console.log('Full response data:', data); // Debug log
-	  const reply = data.answer ?? data.error ?? '[No response]'; // Use 'answer'; fallback to error if present
-	  addMessage(reply, 'agent');
-	  history.push({ role: 'assistant', text: reply });
-	  if (history.length > MAX_TURNS * 2) history.splice(0, history.length - MAX_TURNS * 2);
+      const data = await res.json();
+      console.log('Full response data:', data); // Debug log
+      const reply = data.answer ?? data.error ?? '[No response]'; // Use 'answer'; fallback to error if present
+      addMessage(reply, 'agent');
+      history.push({ role: 'assistant', text: reply });
+      if (history.length > MAX_TURNS * 2) history.splice(0, history.length - MAX_TURNS * 2);
     } catch (err) {
       console.error('Fetch error:', err);
       addMessage('Fetch failed: ' + err.message, 'agent');
     } finally {
       sendBtn.disabled = false;
-      chatHistory.removeChild(thinkingMsg); // Remove thinking message
+      if (thinkingMsg.parentNode) {
+        chatHistory.removeChild(thinkingMsg); // Remove thinking message
+      }
     }
   });
 });
