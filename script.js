@@ -197,7 +197,11 @@ async function populateFACsByTier(tier) {
     history.push({ role: 'user', text: input });
     if (history.length > MAX_TURNS * 2) history.splice(0, history.length - MAX_TURNS * 2);
     userInput.value = '';
-
+    const thinkingMsg = document.createElement('div');
+    thinkingMsg.className = 'chat-message agent thinking';
+    thinkingMsg.textContent = 'Thinking...'; // Or add a spinner: innerHTML = '<div class="spinner"></div>'; with CSS
+    chatHistory.appendChild(thinkingMsg);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
     const rawLabel = facSelect?.options[facSelect.selectedIndex]?.text || '';
     const binderLabel = binderStyleLabel(rawLabel);
     const { facCode, facNumber, facAcronym, facFamily } = extractFacCodeAndAcr(binderLabel);
@@ -210,6 +214,7 @@ async function populateFACsByTier(tier) {
       const res = await fetch('https://cgip-fac-assistant.b-russell776977.workers.dev', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+		  
         body: JSON.stringify({
           query: input,
           tier: tierSelect?.value,
@@ -225,7 +230,10 @@ async function populateFACsByTier(tier) {
           docx_url: docxUrl,
           history
         })
-      });
+      const data = await res.json();
+      const reply = data.answer ?? data.error ?? '[No response]';
+      addMessage(reply, 'agent');
+	  });
 
       console.log('POST response status:', res.status);
       if (!res.ok) {
@@ -246,6 +254,7 @@ async function populateFACsByTier(tier) {
       addMessage('Fetch failed: ' + err.message, 'agent');
     } finally {
       sendBtn.disabled = false;
+      chatHistory.removeChild(thinkingMsg); // Remove thinking message
     }
   });
 });
