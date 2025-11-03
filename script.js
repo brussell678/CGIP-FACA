@@ -6,8 +6,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const facSelect = document.getElementById('fac-select');
   const coaSelect = document.getElementById('coa-select');
   const teaserEl = document.getElementById('teaser'); // #5: Teaser element
-  const history = [];
+  let history = []; // Now loaded/saved via localStorage for #6
   const MAX_TURNS = 12;
+  let fuse; // #7: Fuse instance for FAC search
+  let facContent = []; // #7: FAC items/content for indexing (array of objects: { item: 'text', citations: [...] })
 
   // New for #2: Off-Topic Pre-Filter (expand as needed)
   const blockedKeywords = ['weather', 'news', 'joke', 'hello']; // Keyword block-list
@@ -101,6 +103,26 @@ document.addEventListener('DOMContentLoaded', () => {
     return { facCode: base, facNumber: num, facAcronym: acr, facFamily: fam };
   }
 
+  // #7: Load and index FAC content for fuzzy search (on FAC change)
+  facSelect.addEventListener('change', async () => {
+    const facId = facSelect.value;
+    if (!facId) return;
+    try {
+      const res = await fetch(`https://cgip-fac-assistant.b-russell776977.workers.dev/facs?id=${facId}`); // Assume backend endpoint for FAC details
+      if (!res.ok) throw new Error('FAC fetch failed');
+      const data = await res.json();
+      facContent = data.items || []; // Assume array of { item: 'text', citations: [...] } from KV/content
+      fuse = new Fuse(facContent, {
+        keys: ['item'], // Search on item text
+        threshold: 0.3, // Fuzzy tolerance
+        includeScore: true
+      });
+      console.log('FAC indexed for fuzzy search:', facContent.length, 'items');
+    } catch (err) {
+      console.error('FAC index error:', err);
+    }
+  });
+
   // Updated populateFACsByTier (replace existing)
   async function populateFACsByTier(tier) {
     console.log('Fetching FACs for tier:', tier);
@@ -190,21 +212,46 @@ document.addEventListener('DOMContentLoaded', () => {
     return text.replace(urlRegex, url => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
   }
 
-  function addMessage(text, sender) {
+  // #6: Load history from localStorage on init
+  function loadHistory() {
+    const saved = localStorage.getItem('facChatHistory');
+    if (saved) {
+      history = JSON.parse(saved);
+      history.forEach((entry, index) => {
+        const { text, role } = entry;
+        addMessage(text, role === 'user' ? 'user' : 'agent', false); // false to skip save
+      });
+      console.log('Loaded history:', history.length, 'entries');
+    }
+  }
+
+  // #6: Save history to localStorage
+  function saveHistory() {
+    localStorage.setItem('facChatHistory', JSON.stringify(history));
+  }
+
+  function addMessage(text, sender, save = true) {
     console.log('Adding message:', { text, sender });
+    const details = document.createElement('details');
+    details.open = true; // Open by default
+    const summary = document.createElement('summary');
+    summary.textContent = sender === 'user' ? 'Query' : 'Response'; // Group label
+    details.appendChild(summary);
     const msg = document.createElement('div');
     msg.className = 'chat-message ' + sender;
     let content = sender === 'agent' ? linkify(text) : text;
     if (sender === 'agent') {
-      // #4: Append clickable suggestions (example: 2-3 follow-ups; customize per response if needed)
+      // #4: Append clickable suggestions
       content += '<br><br>Would you like to:<br>';
       content += '<button class="suggestion-btn" onclick="fillAndSend(\'Explain a specific citation?\')">Explain citation?</button>';
       content += '<button class="suggestion-btn" onclick="fillAndSend(\'Generate checklist for this FAC?\')">Generate checklist?</button>';
       content += '<button class="suggestion-btn" onclick="fillAndSend(\'Note inconsistencies?\')">Note inconsistencies?</button>';
     }
     msg.innerHTML = content;
-    chatHistory.appendChild(msg);
+    details.appendChild(msg);
+    chatHistory.appendChild(details);
     chatHistory.scrollTop = chatHistory.scrollHeight;
+    if (save) saveHistory(); // #6: Save on add
   }
 
   // #4: Fill and Send function for suggestions
@@ -254,10 +301,25 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    // #7: FAC-Aware Fuzzy Search (pre-LLM filter/context)
+    let searchContext = '';
+    if (fuse) {
+      const results = fuse.search(input);
+      if (results.length === 0) {
+        addMessage('No relevant matches found in selected FAC. Try rephrasing.', 'agent');
+        return;
+      }
+      // Top-3 as context for LLM prompt
+      searchContext = results.slice(0, 3).map(r => r.item.item).join('\n');
+      console.log('Fuzzy matches:', results.length);
+    } else {
+      addMessage('FAC not indexed for search. Select FAC first.', 'agent');
+      return;
+    }
+
     addMessage(input, 'user');
     history.push({ role: 'user', text: input });
     if (history.length > MAX_TURNS * 2) history.splice(0, history.length - MAX_TURNS * 2);
-    userInput.value = '';
 
     const rawLabel = facSelect?.options[facSelect.selectedIndex]?.text || '';
     const binderLabel = binderStyleLabel(rawLabel);
@@ -279,17 +341,17 @@ document.addEventListener('DOMContentLoaded', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          query: input,
+          query: input + '\nRelevant context: ' + searchContext, // #7: Append fuzzy context to prompt
           tier: tierSelect?.value,
-          fac: facSelect?.value,           // still okay to send; backend can use it
+          fac: facSelect?.value,           
           facLabel: binderLabel,
           facCode,
           facNumber,
-          fac_number: facNumber,           // <-- add this
+          fac_number: facNumber,           
           facAcronym,
           facFamily,
-          persona: coaSelect?.value,       // <-- optional: align naming with backend
-          coa: coaSelect?.value,           // kept for backward compat
+          persona: coaSelect?.value,       
+          coa: coaSelect?.value,           
           docx_url: docxUrl,
           history
         })
@@ -319,4 +381,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
+
+  // #6: Load history on init; save on unload
+  loadHistory();
+  window.addEventListener('beforeunload', saveHistory);
 });
