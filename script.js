@@ -5,12 +5,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const tierSelect = document.getElementById('tier-select');
   const facSelect = document.getElementById('fac-select');
   const coaSelect = document.getElementById('coa-select');
+  const teaserEl = document.getElementById('teaser'); // #5: Teaser element
   const history = [];
   const MAX_TURNS = 12;
 
   // New for #2: Off-Topic Pre-Filter (expand as needed)
   const blockedKeywords = ['weather', 'news', 'joke', 'hello']; // Keyword block-list
   const blockedRegex = /(stock market|current events|politics)/i; // Example regex for patterns
+
+  // New for #5: Dynamic Persona Teaser (3-bullet previews)
+  const teasers = {
+    'FACA Reference Interpreter': '• Provide citations from MCO/NAVMC\n• Explain FAC items with hyperlinks\n• Highlight inconsistencies in SOPs',
+    'Evidence Pack Builder': '• Compile checklists with references\n• Suggest evidence documents\n• Note potential audit discrepancies',
+    'Checklist Readiness Coach': '• Assess unit readiness gaps\n• Recommend training actions\n• Track progress with citations',
+    'Training Crash-Course Generator': '• Generate FAC-specific quizzes\n• Summarize key references\n• Create study guides with hyperlinks'
+  };
 
   // Updated toTitleCase: Title case base, always uppercase acronym-like content in parens (2+ letters, no spaces)
   function toTitleCase(str) {
@@ -185,14 +194,24 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('Adding message:', { text, sender });
     const msg = document.createElement('div');
     msg.className = 'chat-message ' + sender;
+    let content = sender === 'agent' ? linkify(text) : text;
     if (sender === 'agent') {
-      msg.innerHTML = linkify(text); // Make links clickable for AI responses
-    } else {
-      msg.textContent = text;
+      // #4: Append clickable suggestions (example: 2-3 follow-ups; customize per response if needed)
+      content += '<br><br>Would you like to:<br>';
+      content += '<button class="suggestion-btn" onclick="fillAndSend(\'Explain a specific citation?\')">Explain citation?</button>';
+      content += '<button class="suggestion-btn" onclick="fillAndSend(\'Generate checklist for this FAC?\')">Generate checklist?</button>';
+      content += '<button class="suggestion-btn" onclick="fillAndSend(\'Note inconsistencies?\')">Note inconsistencies?</button>';
     }
+    msg.innerHTML = content;
     chatHistory.appendChild(msg);
     chatHistory.scrollTop = chatHistory.scrollHeight;
   }
+
+  // #4: Fill and Send function for suggestions
+  window.fillAndSend = function(text) { // Global for onclick
+    userInput.value = text;
+    chatForm.dispatchEvent(new Event('submit'));
+  };
 
   console.log('Initializing script.js');
   populateCOAs();
@@ -200,6 +219,12 @@ document.addEventListener('DOMContentLoaded', () => {
   tierSelect.addEventListener('change', () => {
     console.log('Tier changed to:', tierSelect.value);
     populateFACsByTier(tierSelect.value);
+  });
+
+  // #5: Show teaser on persona change
+  coaSelect.addEventListener('change', () => {
+    const persona = coaSelect.value;
+    teaserEl.textContent = teasers[persona] || '';
   });
 
   const sendBtn = chatForm.querySelector('button');
