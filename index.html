@@ -7,6 +7,7 @@
   <title>CGIP FAC Assistant Interface (BETA)</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mui/material@5.14.6/dist/material.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script> <!-- #7: Fuse.js for fuzzy search -->
   <style>
 	:root {
 	--usmc-scarlet: #AF1E2D;
@@ -130,6 +131,30 @@
       margin: 0.5rem 0 1rem 0;
       font-size: 0.9rem;
     }
+    /* New for #6: Accordion CSS */
+    details {
+      margin-bottom: 1rem;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 0.5rem;
+    }
+    summary {
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--usmc-scarlet);
+      list-style: none; /* Hide default marker */
+    }
+    summary::-webkit-details-marker {
+      display: none;
+    }
+    summary::before {
+      content: '▶ '; /* Custom arrow */
+      display: inline-block;
+      transition: transform 0.2s;
+    }
+    details[open] > summary::before {
+      transform: rotate(90deg);
+    }
   </style>
 </head>
 <body>
@@ -157,21 +182,4 @@
       </div>
       <div style="flex:1;min-width:220px">
         <label for="coa-select" style="display:block;font-weight:700;margin-bottom:.25rem;">Persona</label>
-        <select id="coa-select" style="width:100%;padding:.5rem;border:1px solid #b0b0b0;border-radius:4px;">
-        </select>
-      </div>
-    </div>
-    <div id="teaser"></div> <!-- #5: Dynamic Persona Teaser -->
-    <div class="chat-history" id="chat-history"></div>
-    <form class="chat-input-area" id="chat-form" autocomplete="off">
-      <textarea id="user-input" rows="2" placeholder="Type your question for the Assistant..." required></textarea>
-      <button type="submit">Send</button>
-    </form>
-  </div>
-  <script src="script.js"></script>
-  <div id="igmc-footer" style="max-width:900px;margin:1rem auto 2rem auto;color:#556; font-size:.9rem; text-align:center;">
-    <em>Loading IGMC FAC site status…</em>
-  </div>
-
-</body>
-</html>
+        <select id="coa-select
