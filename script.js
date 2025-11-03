@@ -8,6 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const history = [];
   const MAX_TURNS = 12;
 
+  // New for #2: Off-Topic Pre-Filter (expand as needed)
+  const blockedKeywords = ['weather', 'news', 'joke', 'hello']; // Keyword block-list
+  const blockedRegex = /(stock market|current events|politics)/i; // Example regex for patterns
+
   // Updated toTitleCase: Title case base, always uppercase acronym-like content in parens (2+ letters, no spaces)
   function toTitleCase(str) {
     // Title case the entire string first
@@ -200,10 +204,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const sendBtn = chatForm.querySelector('button');
 
+  // #3: Input UX 'Enter' behavior (Shift+Enter = newline; Enter = send)
+  userInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      chatForm.dispatchEvent(new Event('submit')); // Trigger submit
+    }
+  });
+
   chatForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const input = userInput.value.trim();
     if (!input) return;
+
+    // #1: Context Locking (ensure tier/fac/persona selected)
+    if (!tierSelect.value || !facSelect.value || !coaSelect.value) {
+      addMessage('Please select Tier, FAC, and Persona first.', 'agent');
+      return;
+    }
+
+    // #2: Off-Topic Pre-Filter (check keywords/regex → FAM referral)
+    if (blockedKeywords.some(word => input.toLowerCase().includes(word)) || blockedRegex.test(input)) {
+      addMessage('This is outside the FAC scope – refer to the Functional Area Manager. <a href="mailto:tanya.johnson@usmc.mil?subject=FAC%20Query&body=Hi, I asked: ' + encodeURIComponent(input) + '">Email FAM</a>', 'agent');
+      return;
+    }
 
     addMessage(input, 'user');
     history.push({ role: 'user', text: input });
