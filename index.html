@@ -109,6 +109,27 @@
       .main-container { padding: 1rem; }
       .header { flex-direction: column; gap: 0.5rem; padding: 1rem; }
     }
+    /* New for #4: Suggestion buttons */
+    .suggestion-btn {
+      background: var(--usmc-gold);
+      color: var(--navy-900);
+      border: none;
+      padding: 0.5rem 1rem;
+      margin: 0.5rem 0.5rem 0 0;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .suggestion-btn:hover {
+      background: #d99a00;
+    }
+    /* New for #5: Teaser style */
+    #teaser {
+      font-style: italic;
+      color: #666;
+      margin: 0.5rem 0 1rem 0;
+      font-size: 0.9rem;
+    }
   </style>
 </head>
 <body>
@@ -140,6 +161,7 @@
         </select>
       </div>
     </div>
+    <div id="teaser"></div> <!-- #5: Dynamic Persona Teaser -->
     <div class="chat-history" id="chat-history"></div>
     <form class="chat-input-area" id="chat-form" autocomplete="off">
       <textarea id="user-input" rows="2" placeholder="Type your question for the Assistant..." required></textarea>
