@@ -7,18 +7,31 @@
   <title>CGIP FAC Assistant Interface (BETA)</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mui/material@5.14.6/dist/material.min.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> <!-- #9: jsPDF for PDF export -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script> <!-- #9: html2canvas for image capture in PDF -->
   <style>
 	:root {
 	--usmc-scarlet: #AF1E2D;
 	--usmc-gold: #F2A900;
 	--navy-900: #1e2a37;
+	--bg: #f8f9fa;
+	--text: #000;
+	--border: #b0b0b0;
+	--chat-bg: #f5f7fa;
+	--user-text: #205081;
+	--agent-text: #14532d;
 	}
+    .dark {
+      --bg: #1a1a1a;
+      --text: #f0f0f0;
+      --border: #444;
+      --chat-bg: #222;
+      --user-text: #a0c4ff;
+      --agent-text: #b2f2bb;
+    }
     body {
       margin: 0;
       font-family: 'Roboto', Arial, sans-serif;
-      background: #f8f9fa;
+      background: var(--bg);
+      color: var(--text);
     }
     .header {
       background: var(--navy-900);
@@ -31,20 +44,23 @@
     .main-container {
       max-width: 900px;
       margin: 2rem auto;
-      background: #fff;
+      background: #fff; /* Override for light/dark if needed */
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.07);
       padding: 2rem;
+    }
+    .dark .main-container {
+      background: #222;
     }
     .chat-history {
       max-height: 400px;
       overflow-y: auto;
       margin-bottom: 1.5rem;
-      border: 1px solid #e0e0e0;
+      border: 1px solid var(--border);
       border-radius: 4px;
       padding: 1rem;
 	  position: relative;
-      background: #f5f7fa;
+      background: var(--chat-bg);
     }
 	.chat-history::after {
 	content: "";
@@ -65,11 +81,11 @@
     }
     .chat-message.user {
       text-align: right;
-      color: #205081;
+      color: var(--user-text);
     }
     .chat-message.agent {
       text-align: left;
-      color: #14532d;
+      color: var(--agent-text);
     }
     .chat-input-area {
       display: flex;
@@ -80,9 +96,11 @@
       flex: 1;
       padding: 0.75rem;
       border-radius: 4px;
-      border: 1px solid #b0b0b0;
+      border: 1px solid var(--border);
       font-size: 1rem;
       resize: none;
+      background: var(--bg);
+      color: var(--text);
     }
     .chat-input-area button {
       padding: 0.75rem 1.5rem;
@@ -141,6 +159,7 @@
       <span style="font-size:1.3rem;font-weight:700;">CGIP FAC Assistant (BETA)</span>
     </div>
     <button style="background:transparent;border:none;color:#fff;cursor:pointer;font-size:1rem;">Logout</button>
+    <button onclick="toggleDark()" style="background:transparent;border:none;color:#fff;cursor:pointer;font-size:1rem;">🌙 Dark Mode</button> <!-- #15: Toggle -->
   </div>
   <div class="main-container">
     <div class="filters" style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;">
@@ -168,8 +187,6 @@
     <form class="chat-input-area" id="chat-form" autocomplete="off">
       <textarea id="user-input" rows="2" placeholder="Type your question for the Assistant..." required></textarea>
       <button type="submit">Send</button>
-      <button type="button" onclick="exportPDF()">Export PDF</button> <!-- #9: Export PDF -->
-      <button type="button" onclick="copyMarkdown()">Copy Markdown</button> <!-- #9: Copy MD -->
     </form>
   </div>
   <script src="script.js"></script>
