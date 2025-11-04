@@ -130,21 +130,25 @@
       margin: 0.5rem 0 1rem 0;
       font-size: 0.9rem;
     }
+    /* New for #17: Focus styles for keyboard nav */
+    :focus {
+      outline: 2px solid var(--usmc-gold);
+    }
   </style>
 </head>
 <body>
   <div class="header">
     <div>
-      <img src="usmc-logo.png" alt="USMC" style="height:40px;vertical-align:middle;margin-right:1rem;">
+      <img src="usmc-logo.png" alt="USMC logo" style="height:40px;vertical-align:middle;margin-right:1rem;"> <!-- #17: Alt text -->
       <span style="font-size:1.3rem;font-weight:700;">CGIP FAC Assistant (BETA)</span>
     </div>
-    <button style="background:transparent;border:none;color:#fff;cursor:pointer;font-size:1rem;">Logout</button>
+    <button style="background:transparent;border:none;color:#fff;cursor:pointer;font-size:1rem;" aria-label="Logout">Logout</button> <!-- #17: Aria -->
   </div>
   <div class="main-container">
     <div class="filters" style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;">
       <div style="flex:1;min-width:180px">
         <label for="tier-select" style="display:block;font-weight:700;margin-bottom:.25rem;">FAC Tier</label>
-        <select id="tier-select" style="width:100%;padding:.5rem;border:1px solid #b0b0b0;border-radius:4px;">
+        <select id="tier-select" aria-label="Select FAC Tier" style="width:100%;padding:.5rem;border:1px solid #b0b0b0;border-radius:4px;"> <!-- #17: Aria -->
           <option value="CoRE" selected>CoRE</option>
           <option value="CoRE+">CoRE+</option>
           <option value="Non-CoRE">Non-CoRE</option>
@@ -152,20 +156,21 @@
       </div>
       <div style="flex:2;min-width:240px">
         <label for="fac-select" style="display:block;font-weight:700;margin-bottom:.25rem;">FAC</label>
-        <select id="fac-select" style="width:100%;padding:.5rem;border:1px solid #b0b0b0;border-radius:4px;">
+        <select id="fac-select" aria-label="Select FAC" style="width:100%;padding:.5rem;border:1px solid #b0b0b0;border-radius:4px;"> <!-- #17: Aria -->
         </select>
       </div>
       <div style="flex:1;min-width:220px">
         <label for="coa-select" style="display:block;font-weight:700;margin-bottom:.25rem;">Persona</label>
-        <select id="coa-select" style="width:100%;padding:.5rem;border:1px solid #b0b0b0;border-radius:4px;">
+        <select id="coa-select" aria-label="Select Persona" style="width:100%;padding:.5rem;border:1px solid #b0b0b0;border-radius:4px;"> <!-- #17: Aria -->
         </select>
       </div>
     </div>
     <div id="teaser"></div> <!-- #5: Dynamic Persona Teaser -->
     <div class="chat-history" id="chat-history"></div>
     <form class="chat-input-area" id="chat-form" autocomplete="off">
-      <textarea id="user-input" rows="2" placeholder="Type your question for the Assistant..." required></textarea>
-      <button type="submit">Send</button>
+      <textarea id="user-input" rows="2" placeholder="Type your question for the Assistant..." required aria-label="Enter query"></textarea> <!-- #17: Aria -->
+      <button type="submit" aria-label="Send message">Send</button> <!-- #17: Aria -->
+      <button type="button" onclick="startVoice()" style="background:transparent;border:none;cursor:pointer;" aria-label="Start voice input">🎤</button> <!-- #12: Mic button, #17: Aria -->
     </form>
   </div>
   <script src="script.js"></script>
