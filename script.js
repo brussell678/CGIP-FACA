@@ -248,12 +248,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // #2: Off-Topic Pre-Filter (check keywords/regex → FAM referral with #13 template)
+    // #2: Off-Topic Pre-Filter (check keywords/regex → FAM referral)
     if (blockedKeywords.some(word => input.toLowerCase().includes(word)) || blockedRegex.test(input)) {
-      const fac = facSelect.options[facSelect.selectedIndex]?.text || 'Unknown';
-      const persona = coaSelect.value || 'Unknown';
-      const mailto = `mailto:tanya.johnson@usmc.mil?subject=FAC%20Query%20-${encodeURIComponent(fac)}&body=Hi%20FAM,%20In%20persona%20${encodeURIComponent(persona)},%20I%20asked:%20${encodeURIComponent(input)}`;
-      addMessage(`This is outside the FAC scope – refer to the Functional Area Manager. <a href="${mailto}">Email FAM</a>`, 'agent');
+      addMessage('This is outside the FAC scope – refer to the Functional Area Manager. <a href="mailto:tanya.johnson@usmc.mil?subject=FAC%20Query&body=Hi, I asked: ' + encodeURIComponent(input) + '">Email FAM</a>', 'agent');
       return;
     }
 
@@ -284,15 +281,15 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify({
           query: input,
           tier: tierSelect?.value,
-          fac: facSelect?.value,           
+          fac: facSelect?.value,           // still okay to send; backend can use it
           facLabel: binderLabel,
           facCode,
           facNumber,
-          fac_number: facNumber,           
+          fac_number: facNumber,           // <-- add this
           facAcronym,
           facFamily,
-          persona: coaSelect?.value,       
-          coa: coaSelect?.value,           
+          persona: coaSelect?.value,       // <-- optional: align naming with backend
+          coa: coaSelect?.value,           // kept for backward compat
           docx_url: docxUrl,
           history
         })
@@ -322,9 +319,4 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
-
-  // #15: Dark Mode Toggle
-  window.toggleDark = function() {
-    document.body.classList.toggle('dark');
-  };
 });
