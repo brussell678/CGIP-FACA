@@ -281,15 +281,15 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify({
           query: input,
           tier: tierSelect?.value,
-          fac: facSelect?.value,           // still okay to send; backend can use it
+          fac: facSelect?.value,           
           facLabel: binderLabel,
           facCode,
           facNumber,
-          fac_number: facNumber,           // <-- add this
+          fac_number: facNumber,           
           facAcronym,
           facFamily,
-          persona: coaSelect?.value,       // <-- optional: align naming with backend
-          coa: coaSelect?.value,           // kept for backward compat
+          persona: coaSelect?.value,       
+          coa: coaSelect?.value,           
           docx_url: docxUrl,
           history
         })
@@ -319,4 +319,22 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
+
+  // #12: Voice Input (Web Speech API with fallback)
+  window.startVoice = function() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Voice input not supported in this browser.');
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.onresult = (e) => {
+      userInput.value += e.results[0][0].transcript;
+    };
+    recognition.onerror = (e) => {
+      console.error('Voice error:', e);
+      alert('Voice input error: ' + e.error);
+    };
+    recognition.start();
+  };
 });
