@@ -6,10 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const facSelect = document.getElementById('fac-select');
   const coaSelect = document.getElementById('coa-select');
   const teaserEl = document.getElementById('teaser'); // #5: Teaser element
-  let history = []; // Now loaded/saved via localStorage for #6
+  const history = [];
   const MAX_TURNS = 12;
-  let fuse; // #7: Fuse instance for FAC search
-  let facContent = []; // #7: FAC items/content for indexing (array of objects: { item: 'text', citations: [...] })
 
   // New for #2: Off-Topic Pre-Filter (expand as needed)
   const blockedKeywords = ['weather', 'news', 'joke', 'hello']; // Keyword block-list
@@ -21,6 +19,14 @@ document.addEventListener('DOMContentLoaded', () => {
     'Evidence Pack Builder': '• Compile checklists with references\n• Suggest evidence documents\n• Note potential audit discrepancies',
     'Checklist Readiness Coach': '• Assess unit readiness gaps\n• Recommend training actions\n• Track progress with citations',
     'Training Crash-Course Generator': '• Generate FAC-specific quizzes\n• Summarize key references\n• Create study guides with hyperlinks'
+  };
+
+  // New for #8: Citation versions (static map; fetch from citations.json if expanded)
+  const citationVersions = {
+    'MCO 1320.11H': '24 Mar 2025',
+    'MCO 1500.60A': '10 Feb 2025',
+    'MCO 1500.52D': '28 Mar 2025'
+    // Add more from citations.json
   };
 
   // Updated toTitleCase: Title case base, always uppercase acronym-like content in parens (2+ letters, no spaces)
@@ -102,26 +108,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const fam = Array.from(new Set([num, base, `${base}.1`, `${base}.01`].filter(Boolean)));
     return { facCode: base, facNumber: num, facAcronym: acr, facFamily: fam };
   }
-
-  // #7: Load and index FAC content for fuzzy search (on FAC change)
-  facSelect.addEventListener('change', async () => {
-    const facId = facSelect.value;
-    if (!facId) return;
-    try {
-      const res = await fetch(`https://cgip-fac-assistant.b-russell776977.workers.dev/facs?id=${facId}`); // Assume backend endpoint for FAC details
-      if (!res.ok) throw new Error('FAC fetch failed');
-      const data = await res.json();
-      facContent = data.items || []; // Assume array of { item: 'text', citations: [...] } from KV/content
-      fuse = new Fuse(facContent, {
-        keys: ['item'], // Search on item text
-        threshold: 0.3, // Fuzzy tolerance
-        includeScore: true
-      });
-      console.log('FAC indexed for fuzzy search:', facContent.length, 'items');
-    } catch (err) {
-      console.error('FAC index error:', err);
-    }
-  });
 
   // Updated populateFACsByTier (replace existing)
   async function populateFACsByTier(tier) {
@@ -212,46 +198,29 @@ document.addEventListener('DOMContentLoaded', () => {
     return text.replace(urlRegex, url => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
   }
 
-  // #6: Load history from localStorage on init
-  function loadHistory() {
-    const saved = localStorage.getItem('facChatHistory');
-    if (saved) {
-      history = JSON.parse(saved);
-      history.forEach((entry, index) => {
-        const { text, role } = entry;
-        addMessage(text, role === 'user' ? 'user' : 'agent', false); // false to skip save
-      });
-      console.log('Loaded history:', history.length, 'entries');
-    }
-  }
-
-  // #6: Save history to localStorage
-  function saveHistory() {
-    localStorage.setItem('facChatHistory', JSON.stringify(history));
-  }
-
-  function addMessage(text, sender, save = true) {
+  function addMessage(text, sender) {
     console.log('Adding message:', { text, sender });
-    const details = document.createElement('details');
-    details.open = true; // Open by default
-    const summary = document.createElement('summary');
-    summary.textContent = sender === 'user' ? 'Query' : 'Response'; // Group label
-    details.appendChild(summary);
     const msg = document.createElement('div');
     msg.className = 'chat-message ' + sender;
     let content = sender === 'agent' ? linkify(text) : text;
     if (sender === 'agent') {
-      // #4: Append clickable suggestions
+      // #8: Auto-link MCOs with version guard
+      content = content.replace(
+        /MCO (\d+\.\d+)/g,
+        match => {
+          const version = citationVersions[match] || 'Latest';
+          return `<a href="https://www.marines.mil/Portals/1/Publications/MCO%20$1.pdf" target="_blank">${match} (Rev: ${version})</a>`;
+        }
+      );
+      // #4: Append clickable suggestions (example: 2-3 follow-ups; customize per response if needed)
       content += '<br><br>Would you like to:<br>';
       content += '<button class="suggestion-btn" onclick="fillAndSend(\'Explain a specific citation?\')">Explain citation?</button>';
       content += '<button class="suggestion-btn" onclick="fillAndSend(\'Generate checklist for this FAC?\')">Generate checklist?</button>';
       content += '<button class="suggestion-btn" onclick="fillAndSend(\'Note inconsistencies?\')">Note inconsistencies?</button>';
     }
     msg.innerHTML = content;
-    details.appendChild(msg);
-    chatHistory.appendChild(details);
+    chatHistory.appendChild(msg);
     chatHistory.scrollTop = chatHistory.scrollHeight;
-    if (save) saveHistory(); // #6: Save on add
   }
 
   // #4: Fill and Send function for suggestions
@@ -274,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
     teaserEl.textContent = teasers[persona] || '';
   });
 
-  const sendBtn = chatForm.querySelector('button');
+  const sendBtn = chatForm.querySelector('button[type="submit"]');
 
   // #3: Input UX 'Enter' behavior (Shift+Enter = newline; Enter = send)
   userInput.addEventListener('keydown', (e) => {
@@ -301,25 +270,10 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // #7: FAC-Aware Fuzzy Search (pre-LLM filter/context)
-    let searchContext = '';
-    if (fuse) {
-      const results = fuse.search(input);
-      if (results.length === 0) {
-        addMessage('No relevant matches found in selected FAC. Try rephrasing.', 'agent');
-        return;
-      }
-      // Top-3 as context for LLM prompt
-      searchContext = results.slice(0, 3).map(r => r.item.item).join('\n');
-      console.log('Fuzzy matches:', results.length);
-    } else {
-      addMessage('FAC not indexed for search. Select FAC first.', 'agent');
-      return;
-    }
-
     addMessage(input, 'user');
     history.push({ role: 'user', text: input });
     if (history.length > MAX_TURNS * 2) history.splice(0, history.length - MAX_TURNS * 2);
+    userInput.value = '';
 
     const rawLabel = facSelect?.options[facSelect.selectedIndex]?.text || '';
     const binderLabel = binderStyleLabel(rawLabel);
@@ -341,7 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          query: input + '\nRelevant context: ' + searchContext, // #7: Append fuzzy context to prompt
+          query: input,
           tier: tierSelect?.value,
           fac: facSelect?.value,           
           facLabel: binderLabel,
@@ -382,7 +336,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // #6: Load history on init; save on unload
-  loadHistory();
-  window.addEventListener('beforeunload', saveHistory);
+  // #9: Export PDF (text + canvas for images)
+  window.exportPDF = async function() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const chatEl = document.getElementById('chat-history');
+    const canvas = await html2canvas(chatEl);
+    const imgData = canvas.toDataURL('image/png');
+    doc.addImage(imgData, 'PNG', 10, 10, 190, 0); // Auto-height
+    doc.save('FAC_CrashCourse.pdf');
+  };
+
+  // #9: Copy Markdown (chat as MD)
+  window.copyMarkdown = function() {
+    const md = Array.from(chatHistory.querySelectorAll('.chat-message')).map(msg => {
+      const prefix = msg.classList.contains('user') ? '### User:\n' : '### Assistant:\n';
+      return prefix + msg.innerText + '\n';
+    }).join('\n');
+    navigator.clipboard.writeText(md).then(() => alert('Copied to clipboard!'));
+  };
 });
