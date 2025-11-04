@@ -21,14 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
     'Training Crash-Course Generator': '• Generate FAC-specific quizzes\n• Summarize key references\n• Create study guides with hyperlinks'
   };
 
-  // New for #8: Citation versions (static map; fetch from citations.json if expanded)
-  const citationVersions = {
-    'MCO 1320.11H': '24 Mar 2025',
-    'MCO 1500.60A': '10 Feb 2025',
-    'MCO 1500.52D': '28 Mar 2025'
-    // Add more from citations.json
-  };
-
   // Updated toTitleCase: Title case base, always uppercase acronym-like content in parens (2+ letters, no spaces)
   function toTitleCase(str) {
     // Title case the entire string first
@@ -204,14 +196,6 @@ document.addEventListener('DOMContentLoaded', () => {
     msg.className = 'chat-message ' + sender;
     let content = sender === 'agent' ? linkify(text) : text;
     if (sender === 'agent') {
-      // #8: Auto-link MCOs with version guard
-      content = content.replace(
-        /MCO (\d+\.\d+)/g,
-        match => {
-          const version = citationVersions[match] || 'Latest';
-          return `<a href="https://www.marines.mil/Portals/1/Publications/MCO%20$1.pdf" target="_blank">${match} (Rev: ${version})</a>`;
-        }
-      );
       // #4: Append clickable suggestions (example: 2-3 follow-ups; customize per response if needed)
       content += '<br><br>Would you like to:<br>';
       content += '<button class="suggestion-btn" onclick="fillAndSend(\'Explain a specific citation?\')">Explain citation?</button>';
@@ -243,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
     teaserEl.textContent = teasers[persona] || '';
   });
 
-  const sendBtn = chatForm.querySelector('button[type="submit"]');
+  const sendBtn = chatForm.querySelector('button');
 
   // #3: Input UX 'Enter' behavior (Shift+Enter = newline; Enter = send)
   userInput.addEventListener('keydown', (e) => {
@@ -264,9 +248,12 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // #2: Off-Topic Pre-Filter (check keywords/regex → FAM referral)
+    // #2: Off-Topic Pre-Filter (check keywords/regex → FAM referral with #13 template)
     if (blockedKeywords.some(word => input.toLowerCase().includes(word)) || blockedRegex.test(input)) {
-      addMessage('This is outside the FAC scope – refer to the Functional Area Manager. <a href="mailto:tanya.johnson@usmc.mil?subject=FAC%20Query&body=Hi, I asked: ' + encodeURIComponent(input) + '">Email FAM</a>', 'agent');
+      const fac = facSelect.options[facSelect.selectedIndex]?.text || 'Unknown';
+      const persona = coaSelect.value || 'Unknown';
+      const mailto = `mailto:tanya.johnson@usmc.mil?subject=FAC%20Query%20-${encodeURIComponent(fac)}&body=Hi%20FAM,%20In%20persona%20${encodeURIComponent(persona)},%20I%20asked:%20${encodeURIComponent(input)}`;
+      addMessage(`This is outside the FAC scope – refer to the Functional Area Manager. <a href="${mailto}">Email FAM</a>`, 'agent');
       return;
     }
 
@@ -336,23 +323,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // #9: Export PDF (text + canvas for images)
-  window.exportPDF = async function() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    const chatEl = document.getElementById('chat-history');
-    const canvas = await html2canvas(chatEl);
-    const imgData = canvas.toDataURL('image/png');
-    doc.addImage(imgData, 'PNG', 10, 10, 190, 0); // Auto-height
-    doc.save('FAC_CrashCourse.pdf');
-  };
-
-  // #9: Copy Markdown (chat as MD)
-  window.copyMarkdown = function() {
-    const md = Array.from(chatHistory.querySelectorAll('.chat-message')).map(msg => {
-      const prefix = msg.classList.contains('user') ? '### User:\n' : '### Assistant:\n';
-      return prefix + msg.innerText + '\n';
-    }).join('\n');
-    navigator.clipboard.writeText(md).then(() => alert('Copied to clipboard!'));
+  // #15: Dark Mode Toggle
+  window.toggleDark = function() {
+    document.body.classList.toggle('dark');
   };
 });
